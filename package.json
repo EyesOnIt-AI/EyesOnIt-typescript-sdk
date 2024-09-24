@@ -1,0 +1,31 @@
+{
+  "name": "eyesonit-typescript-sdk",
+  "version": "3.0.0",
+  "description": "EyesOnIt is an advanced, real-time Large Vision Model for processing images and video. The typescript SDK for EyesOnIt simplifies the use of EyesOnIt from node.js and react applications.",
+  "main": "dist/API/EyesOnItAPI.js",
+  "types": "dist/API/EyesOnItAPI.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git"
+  },
+  "author": "",
+  "license": "",
+  "bugs": {},
+  "homepage": "https://www.eyesonit.us",
+  "devDependencies": {
+    "@types/luxon": "^3.3.7",
+    "@types/node": "^22.5.5",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "loglevel": "^1.9.2",
+    "luxon": "^3.4.4"
+  }
+}
