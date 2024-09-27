@@ -1,5 +1,5 @@
 import { EOIAddStreamInputs } from "./eoiAddStreamInputs";
-import { EOIAlerting } from "../elements/eoiAlerting";
+import { EOINotification } from "../elements/eoiNotification";
 import { EOIBaseInputs } from "./eoiBaseInputs";
 import { EOIProcessImageInputs } from "./eoiProcessImageInputs";
 import { EOIMonitorStreamInputs } from "./eoiMonitorStreamInputs";
@@ -61,7 +61,7 @@ export class EOIValidation {
         }
 
         if (response.success) {
-            response = this.validateAlerting(inputs.alerting);
+            response = this.validateNotification(inputs.notification);
         }
 
         if (response.success) {
@@ -194,7 +194,8 @@ export class EOIValidation {
 
                     if (validate_for_video) {
                         if (!object_description.background_prompt) {
-                            if (object_description.threshold < EOIValidation.MIN_PROMPT_THRESHOLD || object_description.threshold > EOIValidation.MAX_PROMPT_THRESHOLD) {
+                            if ((object_description.threshold != undefined && object_description.threshold < EOIValidation.MIN_PROMPT_THRESHOLD) || 
+                                (object_description.threshold != undefined && object_description.threshold > EOIValidation.MAX_PROMPT_THRESHOLD)) {
                                 response = new EOIResponse(false, `The object description alerting threshold must be between ${EOIValidation.MIN_PROMPT_THRESHOLD} and ${EOIValidation.MAX_PROMPT_THRESHOLD}. The threshold for object description '${object_description.text}' is ${object_description.threshold}`);
                             }
                         }
@@ -401,12 +402,12 @@ export class EOIValidation {
         return response;
     }
 
-    public static validateAlerting(alerting: EOIAlerting | undefined): EOIResponse {
+    public static validateNotification(notification: EOINotification | undefined): EOIResponse {
         let response: EOIResponse = EOIResponse.success();
 
-        if (response.success && alerting != null) {
-            if (alerting.image_notification) {
-                response = this.validatePhoneNumber(alerting.phone_number);
+        if (response.success && notification != null) {
+            if (notification.image_notification) {
+                response = this.validatePhoneNumber(notification.phone_number);
             }
         }
 

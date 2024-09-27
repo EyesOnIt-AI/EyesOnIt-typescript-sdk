@@ -1,4 +1,5 @@
-import axios from 'axios';
+import axios, * as others from 'axios';
+
 import { EOIResponse } from "./eoiResponse";
 import { EOIAddStreamInputs } from './inputs/eoiAddStreamInputs';
 import { EOIMonitorStreamInputs } from './inputs/eoiMonitorStreamInputs';
@@ -7,7 +8,7 @@ import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
 import { EOIValidation } from './inputs/eoiValidation';
 import { EOIAddStreamResponse } from './outputs/eoiAddStreamResponse';
 import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionInfoResponse';
-import { EOIGetStreamsInfoResponse } from './outputs/eoiGetStreamsInfoResponse';
+import { EOIGetAllStreamsInfoResponse } from './outputs/eoiGetAllStreamsInfoResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
@@ -17,6 +18,9 @@ import { EOIStopMonitoringStreamResponse } from './outputs/eoiStopMonitoringStre
 import { JSONUtil } from '../utils/JSONUtil';
 import { ExceptionUtil } from '../utils/exceptionUtil';
 import { Logger } from '../utils/logger';
+import { EOIGetStreamDetailsResponse } from './outputs/eoiGetStreamDetailsResponse';
+import { IEOIRESTHandler } from './REST/IEOIRESTHandler';
+import { EOIAxiosRESTHandler } from './REST/EOIAxiosRESTHandler';
 
 export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
@@ -25,15 +29,20 @@ export class EyesOnItAPI {
     private static readonly removeStreamPath = "/remove_stream";
     private static readonly monitorStreamPath = "/monitor_stream";
     private static readonly stopMonitorStreamPath = "/stop_monitoring";
-    private static readonly getStreamsInfoPath = "/get_streams_info";
+    private static readonly getAllStreamsInfoPath = "/get_all_streams_info";
+    private static readonly getStreamDetailsPath = "/get_stream_details";
     private static readonly getLastDetectionInfoPath = "/get_last_detection_info";
     private static readonly getPreviewFramePath = "/get_preview_video_frame";
     private static readonly getVideoFramePath = "/get_video_frame";
 
     private logger;
-    
-    constructor(private apiBasePath: string, customLogger?: any) {
+
+    constructor(private apiBasePath: string, private restHandler?: IEOIRESTHandler, customLogger?: any) {
         let logPrefix = `${this.constructor.name}.constructor`;
+
+        if (this.restHandler == null) {
+            this.restHandler = new EOIAxiosRESTHandler(customLogger);
+        }
 
         this.logger = customLogger || new Logger();
 
@@ -226,23 +235,36 @@ export class EyesOnItAPI {
         return stopMonitorStreamResponse;
     }
 
-    public async getStreamsInfo(): Promise<EOIGetStreamsInfoResponse> {
-        const logPrefix = `${this.constructor.name}.getStreamsInfo`;
+    public async getAllStreamsInfo(): Promise<EOIGetAllStreamsInfoResponse> {
+        const logPrefix = `${this.constructor.name}.getAllStreamsInfo`;
 
-        let eoiGetStreamsInfoResponse: EOIGetStreamsInfoResponse;
+        let eoiGetAllStreamsInfoResponse: EOIGetAllStreamsInfoResponse;
 
-        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getStreamsInfoPath}`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getAllStreamsInfoPath}`;
 
         this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
 
-        try {
-            const response = await axios.get(endPoint);
-            eoiGetStreamsInfoResponse = new EOIGetStreamsInfoResponse(this.handleSuccess(response.data));
-        } catch (error) {
-            eoiGetStreamsInfoResponse = new EOIGetStreamsInfoResponse(this.handleError(error));
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+        eoiGetAllStreamsInfoResponse = new EOIGetAllStreamsInfoResponse(eoiResponse);
+
+        return eoiGetAllStreamsInfoResponse;
+    }
+
+    public async getStreamDetails(streamUrl: string): Promise<EOIGetStreamDetailsResponse> {
+        let eoiGetStreamDetailsResponse = new EOIGetStreamDetailsResponse(EOIValidation.validateStreamUrl(streamUrl));
+
+        if (eoiGetStreamDetailsResponse.success) {
+            const logPrefix = `${this.constructor.name}.getStreamDetails`;
+            const endPoint = `${this.apiBasePath}${EyesOnItAPI.getStreamDetailsPath}`;
+
+            const body: any = { stream_url: streamUrl };
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            const response = await this.doPost(endPoint, body, logPrefix);
+            eoiGetStreamDetailsResponse = new EOIGetStreamDetailsResponse(response);
         }
 
-        return eoiGetStreamsInfoResponse;
+        return eoiGetStreamDetailsResponse;
     }
 
     public async getLastDetectionInfo(streamUrl: string): Promise<EOIGetLastDetectionInfoResponse> {
@@ -308,6 +330,19 @@ export class EyesOnItAPI {
         return getVideoFrameResponse;
     }
 
+    private async doGet(endPoint: string): Promise<EOIResponse> {
+        let apiResponse: EOIResponse | undefined = undefined;
+
+        if (this.restHandler == null) {
+            apiResponse = new EOIResponse(false, "REST handler not defined");
+        }
+        else {
+            apiResponse = await this.restHandler.get(endPoint);
+        }
+
+        return apiResponse;
+    }
+
     private async doPost(endPoint: string, body: any, callerLogPrefix: string): Promise<EOIResponse> {
         const thisLogPrefix = `${this.constructor.name}.doPost`;
         let apiResponse: EOIResponse | undefined = undefined;
@@ -317,16 +352,11 @@ export class EyesOnItAPI {
             'Accept': '*/*'
         };
 
-        await axios.post(endPoint, body, { headers: headers }).then(async (response: any) => {
-            apiResponse = this.handleSuccess(response.data);
-        }).catch(async (error: any) => {
-            this.logger.error(`${thisLogPrefix}: detail: ${JSON.stringify(error.response?.data?.detail)}`);
-
-            apiResponse = this.handleError(error);
-        });
-
-        if (apiResponse == undefined) {
-            apiResponse = EOIResponse.failure();
+        if (this.restHandler == null) {
+            apiResponse = new EOIResponse(false, "REST handler not defined");
+        }
+        else {
+            apiResponse = await this.restHandler.post(endPoint, body, headers);
         }
 
         return apiResponse;

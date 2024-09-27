@@ -9,6 +9,6 @@ export class EOILine {
     public static fromJsonObj(obj: any) {
         return new EOILine(
             obj.name,
-            obj.vertices.map(EOIVertex.fromJsonObj));
+            obj.vertices?.map(EOIVertex.fromJsonObj));
     }
 }

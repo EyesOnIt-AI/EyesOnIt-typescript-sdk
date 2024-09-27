@@ -1,4 +1,4 @@
-import { EOIAlerting } from "../elements/eoiAlerting";
+import { EOINotification } from "../elements/eoiNotification";
 import { EOIBaseInputs } from "./eoiBaseInputs";
 import { EOIResponse } from "../eoiResponse";
 import { EOIRegion } from "../elements/eoiRegion";
@@ -12,7 +12,7 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         public name: string, 
         public frame_rate: number = 5,
         public regions: EOIRegion[],
-        public alerting: EOIAlerting | undefined,
+        public notification: EOINotification | undefined,
         public recording: EOIRecording | undefined,
         public effects: EOIEffects | undefined) {
         super(regions);
@@ -22,8 +22,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         let inputs = new EOIAddStreamInputs(obj.stream_url, 
             obj.name,
             obj.frame_rate,
-            obj.regions.map(EOIRegion.fromJsonObj),
-            EOIAlerting.fromJsonObj(obj.alerting),
+            obj.regions?.map(EOIRegion.fromJsonObj),
+            EOINotification.fromJsonObj(obj.notification),
             EOIRecording.fromJsonObj(obj.recording),
             EOIEffects.fromJsonObj(obj.effects));
 

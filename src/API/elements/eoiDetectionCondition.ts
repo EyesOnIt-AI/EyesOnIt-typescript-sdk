@@ -5,7 +5,7 @@ export class EOIDetectionCondition {
         public type: string, 
         public count: number = 0, 
         public line_name: string, 
-        public alert_side: string, 
+        public alert_direction: string, 
         public objects: EOIDetectionObject[]) { }
 
     public static fromJsonObj(obj: any): EOIDetectionCondition | undefined {
@@ -16,7 +16,7 @@ export class EOIDetectionCondition {
                 obj.type,
                 obj.count,
                 obj.line_name,
-                obj.alert_side,
+                obj.alert_direction,
                 obj.objects?.map(EOIDetectionObject.fromJsonObj),
             );
         }

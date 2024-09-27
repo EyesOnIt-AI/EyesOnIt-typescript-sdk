@@ -3,7 +3,7 @@ import { EOIStreamInfo } from "../elements/eoiStreamInfo";
 import { EOIBaseOutputs } from "./eoiBaseOutputs";
 
 
-export class EOIGetStreamsInfoResponse extends EOIBaseOutputs {
+export class EOIGetAllStreamsInfoResponse extends EOIBaseOutputs {
     public streams: EOIStreamInfo[];
     
     constructor(eoiResponse: EOIResponse) {
@@ -11,7 +11,7 @@ export class EOIGetStreamsInfoResponse extends EOIBaseOutputs {
 
         if (this.success) {
             if (eoiResponse.data?.streams != null) {
-                this.streams = eoiResponse.data.streams.map(EOIStreamInfo.fromJsonObj);
+                this.streams = eoiResponse.data.streams?.map(EOIStreamInfo.fromJsonObj);
             }
         }
     }

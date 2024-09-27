@@ -2,8 +2,8 @@ export class EOIObjectDescription {
     constructor(
         public text: string, 
         public background_prompt: boolean = false,
-        public threshold: number = 0, 
-        public confidence: number = 0, 
+        public threshold?: number, 
+        public confidence?: number, 
         public over_threshold: boolean = false) { }
 
     public static fromJsonObj(obj: any) {
@@ -19,17 +19,17 @@ export class EOIObjectDescription {
     }
 
     public toJSON() {
-        // if (this.background_prompt) {
-        //     return {
-        //         text: this.text,
-        //         background_prompt: this.background_prompt
-        //     };
-        // } else {
+        if (this.background_prompt) {
+            return {
+                text: this.text,
+                background_prompt: this.background_prompt
+            };
+        } else {
             return {
                 text: this.text,
                 background_prompt: this.background_prompt,
                 threshold: this.threshold
             };
-        // }
+        }
     }
 }

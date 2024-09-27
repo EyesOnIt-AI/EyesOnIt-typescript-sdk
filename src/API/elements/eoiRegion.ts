@@ -19,8 +19,8 @@ export class EOIRegion {
         }
         
         region.name = obj.name;
-        region.polygon = obj.polygon.map(EOIVertex.fromJsonObj);
-        region.detection_configs = obj.detection_configs.map(EOIDetectionConfig.fromJsonObj);
+        region.polygon = obj.polygon?.map(EOIVertex.fromJsonObj);
+        region.detection_configs = obj.detection_configs?.map(EOIDetectionConfig.fromJsonObj);
         region.motion_detection = EOIMotionDetection.fromJsonObj(obj.motion_detection);
 
         return region;

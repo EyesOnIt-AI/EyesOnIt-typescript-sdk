@@ -4,6 +4,7 @@ import { EyesOnItAPI } from "./EyesOnItAPI";
 import { EOIMonitorStreamInputs } from "./inputs/eoiMonitorStreamInputs";
 import { EOIGetVideoFrameResponse } from "./outputs/eoiGetVideoFrameResponse";
 import { Logger } from "../utils/logger";
+import { EOIGetAllStreamsInfoResponse } from "./outputs/eoiGetAllStreamsInfoResponse";
 
 export class EOIAPIUtils {
   private logger;
@@ -15,10 +16,10 @@ export class EOIAPIUtils {
   public async getFrameFromStream(streamUrl: string): Promise<EOIGetVideoFrameResponse> {
     let getVideoFrameResponse: EOIGetVideoFrameResponse | undefined = undefined;
 
-    let apiGetStreamsInfoResponse = await this.eoiAPI.getStreamsInfo();
+    let apiGetAllStreamsInfoResponse: EOIGetAllStreamsInfoResponse = await this.eoiAPI.getAllStreamsInfo();
 
-    if (apiGetStreamsInfoResponse.success) {
-      let streamInfo = EOIAPIUtils.getInfoForStream(apiGetStreamsInfoResponse.streams, streamUrl);
+    if (apiGetAllStreamsInfoResponse.success) {
+      let streamInfo = EOIAPIUtils.getInfoForStream(apiGetAllStreamsInfoResponse.streams, streamUrl);
 
       if (streamInfo != null) {
         if (!streamInfo.isMonitoring()) {

@@ -14,7 +14,7 @@ export class EOIProcessImageInputs extends EOIBaseInputs {
 
         if (obj != null) {
             if (obj.regions != null) {
-                let regions = obj.regions.map(EOIRegion.fromJsonObj)
+                let regions = obj.regions?.map(EOIRegion.fromJsonObj)
                 let effects = EOIEffects.fromJsonObj(obj.effects);                
 
                 inputs = new EOIProcessImageInputs(

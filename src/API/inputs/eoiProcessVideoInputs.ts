@@ -23,7 +23,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
         let inputs = new EOIProcessVideoInputs(obj.input_video_path_list, 
             obj.output_video_path,
             obj.frame_rate,
-            obj.regions.map(EOIRegion.fromJsonObj),
+            obj.regions?.map(EOIRegion.fromJsonObj),
             obj.synchronous,
             obj.real_time,
             obj.output_all_frames,

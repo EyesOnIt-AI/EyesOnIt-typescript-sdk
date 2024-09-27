@@ -13,7 +13,7 @@ export class EOIProcessImageResponse extends EOIBaseOutputs {
 
         if (this.success) {
             if (eoiResponse.data?.detections != null) {
-                this.detections = eoiResponse.data.detections.map(EOIDetection.fromJsonObj);
+                this.detections = eoiResponse.data.detections?.map(EOIDetection.fromJsonObj);
             }
 
             this.image = eoiResponse.data?.image;
