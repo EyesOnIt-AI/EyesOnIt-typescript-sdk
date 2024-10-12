@@ -3,10 +3,10 @@ import { EOIDetectionObject } from "./eoiDetectionObject";
 export class EOIDetectionCondition {
     constructor(
         public type: string, 
-        public count: number = 0, 
-        public line_name: string, 
-        public alert_direction: string, 
-        public objects: EOIDetectionObject[]) { }
+        public count: number | null = null, 
+        public line_name: string | null = null, 
+        public alert_direction: string | null = null, 
+        public objects: EOIDetectionObject[] | null = null) { }
 
     public static fromJsonObj(obj: any): EOIDetectionCondition | undefined {
         let detection

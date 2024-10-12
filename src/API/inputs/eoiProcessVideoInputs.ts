@@ -1,4 +1,5 @@
 import { EOIEffects } from "../elements/eoiEffects";
+import { EOILine } from "../elements/eoiLine";
 import { EOIRegion } from "../elements/eoiRegion";
 import { EOIResponse } from "../eoiResponse";
 import { EOIBaseInputs } from "./eoiBaseInputs";
@@ -10,6 +11,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
         public output_video_path: string, 
         public frame_rate: number = 5,
         public regions: EOIRegion[],
+        public lines: EOILine[] | undefined,
         public synchronous: boolean = true,
         public real_time: boolean = false,
         public output_all_frames: boolean = true,
@@ -24,6 +26,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
             obj.output_video_path,
             obj.frame_rate,
             obj.regions?.map(EOIRegion.fromJsonObj),
+            obj.lines?.map(EOILine.fromJsonObj),
             obj.synchronous,
             obj.real_time,
             obj.output_all_frames,

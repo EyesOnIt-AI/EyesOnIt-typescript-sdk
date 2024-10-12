@@ -5,6 +5,7 @@ import { EOIRegion } from "../elements/eoiRegion";
 import { EOIValidation } from "./eoiValidation";
 import { EOIRecording } from "../elements/eoiRecording";
 import { EOIEffects } from "../elements/eoiEffects";
+import { EOILine } from "../elements/eoiLine";
 
 export class EOIAddStreamInputs extends EOIBaseInputs {
     constructor(
@@ -12,6 +13,7 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         public name: string, 
         public frame_rate: number = 5,
         public regions: EOIRegion[],
+        public lines: EOILine[] | undefined,
         public notification: EOINotification | undefined,
         public recording: EOIRecording | undefined,
         public effects: EOIEffects | undefined) {
@@ -23,6 +25,7 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
             obj.name,
             obj.frame_rate,
             obj.regions?.map(EOIRegion.fromJsonObj),
+            obj.lines?.map(EOILine.fromJsonObj),
             EOINotification.fromJsonObj(obj.notification),
             EOIRecording.fromJsonObj(obj.recording),
             EOIEffects.fromJsonObj(obj.effects));

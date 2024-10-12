@@ -5,6 +5,7 @@ import { EOIMonitorStreamInputs } from "./inputs/eoiMonitorStreamInputs";
 import { EOIGetVideoFrameResponse } from "./outputs/eoiGetVideoFrameResponse";
 import { Logger } from "../utils/logger";
 import { EOIGetAllStreamsInfoResponse } from "./outputs/eoiGetAllStreamsInfoResponse";
+import { DelayUtil } from "../utils/delayUtil";
 
 export class EOIAPIUtils {
   private logger;
@@ -36,6 +37,7 @@ export class EOIAPIUtils {
           }
           else {
             this.logger.debug(`Attempt ${attempt + 1} failed: ${getVideoFrameResponse.message}`);
+            await DelayUtil.delay(500);
           }
         }
 

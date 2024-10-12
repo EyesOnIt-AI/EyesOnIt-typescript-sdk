@@ -19,4 +19,8 @@ export class EOIMotionDetection {
 
         return motionDetection;
     }
+
+    public static default(): EOIMotionDetection {
+        return new EOIMotionDetection(true, 300, 5);
+    }
 }

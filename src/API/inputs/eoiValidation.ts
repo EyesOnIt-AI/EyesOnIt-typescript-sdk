@@ -37,27 +37,31 @@ export class EOIValidation {
     private static COUNT_CONDITION_TYPES = ["count_equals", "count_greater_than", "count_less_than"];
     private static LINE_CROSS_CONDITION_TYPES = ["line_cross"];
 
-    private static validateBaseInputs(inputs: EOIBaseInputs, validateForVideo: boolean): EOIResponse {
+    private static validateBaseInputs(inputs: EOIBaseInputs, lines: EOILine[] | undefined, validateForVideo: boolean): EOIResponse {
         let response: EOIResponse = inputs == null ?
             new EOIResponse(false, "inputs = null. Request must include inputs")
             : EOIResponse.success();
 
         if (response.success) {
-            response = this.validateRegions(inputs.regions, validateForVideo);
+            response = this.validateRegions(inputs.regions, lines, validateForVideo);
         }
 
         return response;
     }
 
     public static validateProcessImageInputs(inputs: EOIProcessImageInputs): EOIResponse {
-        return this.validateBaseInputs(inputs, false);
+        return this.validateBaseInputs(inputs, undefined, false);
     }
 
     public static validateAddStreamInputs(inputs: EOIAddStreamInputs): EOIResponse {
-        let response: EOIResponse = this.validateBaseInputs(inputs, true);
+        let response: EOIResponse = this.validateBaseInputs(inputs, inputs.lines, true);
 
         if (response.success) {
             response = this.validateStreamUrl(inputs.stream_url);
+        }
+
+        if (response.success) {
+            response = this.validateLines(inputs.lines);
         }
 
         if (response.success) {
@@ -96,7 +100,11 @@ export class EOIValidation {
     }
 
     public static validateProcessVideoInputs(inputs: EOIProcessVideoInputs): EOIResponse {
-        let response: EOIResponse = this.validateBaseInputs(inputs, true);
+        let response: EOIResponse = this.validateBaseInputs(inputs, inputs.lines, true);
+
+        if (response.success) {
+            response = this.validateLines(inputs.lines);
+        }
 
         // TODO: fill this in
         if (response.success && inputs.frame_rate < EOIValidation.MIN_FRAME_RATE) {
@@ -168,12 +176,10 @@ export class EOIValidation {
 
 
     public static validateObjectDescriptions(object_descriptions: EOIObjectDescription[], validate_for_video: boolean): EOIResponse {
-        let response: EOIResponse = object_descriptions == null || object_descriptions.length == 0 ?
-            new EOIResponse(false, `request must include an object descriptions array. object_descriptions = ${object_descriptions}`)
-            : EOIResponse.success();
+        let response: EOIResponse = EOIResponse.success();
 
         // validate each prompt - minimum length, no duplicates, thresholds
-        if (response.success) {
+        if (object_descriptions != null && object_descriptions.length > 0) {
             let textSet = new Set<string>();
 
             for (const object_description of object_descriptions) {
@@ -194,7 +200,7 @@ export class EOIValidation {
 
                     if (validate_for_video) {
                         if (!object_description.background_prompt) {
-                            if ((object_description.threshold != undefined && object_description.threshold < EOIValidation.MIN_PROMPT_THRESHOLD) || 
+                            if ((object_description.threshold != undefined && object_description.threshold < EOIValidation.MIN_PROMPT_THRESHOLD) ||
                                 (object_description.threshold != undefined && object_description.threshold > EOIValidation.MAX_PROMPT_THRESHOLD)) {
                                 response = new EOIResponse(false, `The object description alerting threshold must be between ${EOIValidation.MIN_PROMPT_THRESHOLD} and ${EOIValidation.MAX_PROMPT_THRESHOLD}. The threshold for object description '${object_description.text}' is ${object_description.threshold}`);
                             }
@@ -208,7 +214,7 @@ export class EOIValidation {
         return response;
     }
 
-    public static validateRegions(regions: EOIRegion[], validateForVideo: boolean): EOIResponse {
+    public static validateRegions(regions: EOIRegion[], lines: EOILine[] | undefined, validateForVideo: boolean): EOIResponse {
         let response: EOIResponse = regions == null ?
             new EOIResponse(false, `request must include at least one region`)
             : EOIResponse.success();
@@ -219,22 +225,24 @@ export class EOIValidation {
             }
 
             regions.forEach((region: EOIRegion) => {
+                if (response.success) {
+                    response = this.validatePolygon(region.polygon);
+                }
+
+                if (response.success) {
+                    response = this.validateDetectionConfigs(region.detection_configs, lines, validateForVideo);
+                }
+
                 let name = region.name == null ? "" : region.name.trim();
 
                 if (name.length < EOIValidation.MIN_REGION_NAME_LENGTH) {
                     response = new EOIResponse(false, `Region name must be at least ${EOIValidation.MIN_REGION_NAME_LENGTH} characters long. Region name is ${region.name}`);
                 }
 
-                if (response.success) {
-                    response = this.validatePolygon(region.polygon);
-                }
-
-                if (response.success && region.motion_detection != null) {
-                    response = this.validateMotionDetection(region.motion_detection);
-                }
-
-                if (response.success) {
-                    response = this.validateDetectionConfigs(region.detection_configs, validateForVideo);
+                if (validateForVideo) {
+                    if (response.success && region.motion_detection != null) {
+                        response = this.validateMotionDetection(region.motion_detection);
+                    }
                 }
             });
         }
@@ -242,7 +250,7 @@ export class EOIValidation {
         return response;
     }
 
-    public static validateDetectionConfigs(detection_configs: EOIDetectionConfig[], validateForVideo: boolean): EOIResponse {
+    public static validateDetectionConfigs(detection_configs: EOIDetectionConfig[], lines: EOILine[] | undefined, validateForVideo: boolean): EOIResponse {
         let response: EOIResponse = detection_configs == null || detection_configs.length == 0 ?
             new EOIResponse(false, `region must include detection configurations`)
             : EOIResponse.success();
@@ -275,11 +283,7 @@ export class EOIValidation {
                         }
                         else {
                             if (response.success) {
-                                response = this.validateLines(detection_config.lines);
-                            }
-
-                            if (response.success) {
-                                response = this.validateConditions(detection_config.conditions, detection_config.lines);
+                                response = this.validateConditions(detection_config.conditions, lines);
                             }
                         }
                     }
@@ -309,7 +313,7 @@ export class EOIValidation {
                         }
 
                         if (response.success) {
-                            if (detectionCondition.count < 0) {
+                            if (detectionCondition.count != null && detectionCondition.count < 0) {
                                 response = new EOIResponse(false, `The detection condition count must be at least 0`);
                             }
                         }

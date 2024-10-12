@@ -30,7 +30,7 @@ export class EOIDetection {
         return detection;
     }
 
-    public getDetectedObjects(): EOIDetectionObject[] {
+    public getDetectedObjects(): EOIDetectionObject[] | null {
         if (this.condition != null) {
             return this.condition.objects;
         }
