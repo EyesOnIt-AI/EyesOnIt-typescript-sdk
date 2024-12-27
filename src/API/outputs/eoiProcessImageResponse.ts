@@ -1,6 +1,5 @@
 import { EOIDetection } from "../elements/eoiDetection";
 import { EOIResponse } from "../eoiResponse";
-import { EOIStreamInfo } from "../elements/eoiStreamInfo";
 import { EOIBaseOutputs } from "./eoiBaseOutputs";
 
 

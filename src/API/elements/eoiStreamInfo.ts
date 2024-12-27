@@ -1,5 +1,6 @@
 import { EOILine } from "./eoiLine";
 import { EOINotification } from "./eoiNotification";
+import { EOIRecording } from "./eoiRecording";
 import { EOIRegion } from "./eoiRegion";
 
 export class EOIStreamInfo {
@@ -10,6 +11,7 @@ export class EOIStreamInfo {
     public regions: EOIRegion[];
     public lines: EOILine[];
     public notification: EOINotification | undefined;
+    public recording: EOIRecording | undefined;
 
     public static fromJsonObj(obj: any): EOIStreamInfo {
         let streamInfo: EOIStreamInfo = new EOIStreamInfo();
@@ -27,6 +29,7 @@ export class EOIStreamInfo {
         this.regions = obj.regions != null ? obj.regions.map(EOIRegion.fromJsonObj) : [];
         this.lines = obj.lines != null ? obj.lines.map(EOILine.fromJsonObj) : [];
         this.notification = EOINotification.fromJsonObj(obj.notification);
+        this.recording = EOIRecording.fromJsonObj(obj.recording);
     }
 
     public isMonitoring(): boolean {

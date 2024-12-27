@@ -1,17 +1,17 @@
 import { EOIDetectionCondition } from "./eoiDetectionCondition";
-import { EOILine } from "./eoiLine";
 import { EOIObjectDescription } from "./eoiObjectDescription";
 
 export class EOIDetectionConfig {
-    public class_name?: string;
-    public class_threshold?: number = 10;
+    public class_name?: string | null;
+    public class_threshold?: number | null = 10;
     public object_size?: number = 100;
     public object_descriptions: EOIObjectDescription[];
     public conditions?: EOIDetectionCondition[];
     public alert_seconds?: number = 0.1
     public reset_seconds?: number = 0.1;
 
-    constructor(init?: Partial<EOIDetectionConfig>) { }
+    constructor(init?: Partial<EOIDetectionConfig>) { 
+    }
 
     public static fromJsonObj(obj: any) {
         let detection_config = undefined;
@@ -35,15 +35,14 @@ export class EOIDetectionConfig {
 
     public static default(): EOIDetectionConfig {
         let detection_config = new EOIDetectionConfig();
-        detection_config.class_name = "";
-        detection_config.class_threshold = 10;
+        detection_config.class_name = null;
+        detection_config.class_threshold = null;
         detection_config.object_size = 100;
         detection_config.object_descriptions = [];
         detection_config.alert_seconds = 5;
         detection_config.reset_seconds = 10;
 
-        let countDetectionCondition = new EOIDetectionCondition("count_greater_than", 0, null, null, null);
-        detection_config.conditions = [ countDetectionCondition ];
+        detection_config.conditions = [];
 
         return detection_config;
     }

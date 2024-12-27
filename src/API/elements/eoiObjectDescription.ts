@@ -11,7 +11,7 @@ export class EOIObjectDescription {
         let object_description = new EOIObjectDescription(
             obj.text,
             obj.background_prompt,
-            obj.alert,
+            obj.alert == true,
             obj.threshold,
             obj.confidence,
             obj.over_threshold

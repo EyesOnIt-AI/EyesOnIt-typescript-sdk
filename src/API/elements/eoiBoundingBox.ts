@@ -1,10 +1,15 @@
 export class EOIBoundingBox {
+    public right: number;
+    public bottom: number;
 
     constructor(
         public top: number,
         public left: number,
         public width: number,
-        public height: number) { }
+        public height: number) { 
+            this.right = left + width;
+            this.bottom = top + height;
+        }
 
     public static fromJsonObj(obj: any): EOIBoundingBox | undefined {
         let boundingBox;

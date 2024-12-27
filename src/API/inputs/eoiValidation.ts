@@ -199,7 +199,7 @@ export class EOIValidation {
                     }
 
                     if (validate_for_video) {
-                        if (!object_description.background_prompt) {
+                        if (!object_description.background_prompt && object_description.alert) {
                             if ((object_description.threshold != undefined && object_description.threshold < EOIValidation.MIN_PROMPT_THRESHOLD) ||
                                 (object_description.threshold != undefined && object_description.threshold > EOIValidation.MAX_PROMPT_THRESHOLD)) {
                                 response = new EOIResponse(false, `The object description alerting threshold must be between ${EOIValidation.MIN_PROMPT_THRESHOLD} and ${EOIValidation.MAX_PROMPT_THRESHOLD}. The threshold for object description '${object_description.text}' is ${object_description.threshold}`);
@@ -258,8 +258,8 @@ export class EOIValidation {
         if (response.success) {
             for (var detection_config of detection_configs) {
                 if (response.success) {
-                    if (detection_config.class_name == null && detection_config.object_size == null) {
-                        response = new EOIResponse(false, `In detection configurations, either a class name or an object size must be specified`);
+                    if (detection_config.object_size == null) {
+                        response = new EOIResponse(false, `In detection configurations, object size must be specified`);
                     }
                     else if (detection_config.class_name != null && detection_config.class_threshold == null) {
                         response = new EOIResponse(false, `In detection configurations, if a class name is specified, a class threshold must also be specified.`);

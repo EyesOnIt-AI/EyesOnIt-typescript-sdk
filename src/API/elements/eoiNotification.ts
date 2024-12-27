@@ -1,21 +1,28 @@
-import { EOIAlertDetection } from "./eoiAlertDetection";
+import { EOILastDetectionInfo } from "./eoiLastDetectionInfo";
 
 export class EOINotification {
-    public last_detection: EOIAlertDetection;
+    public last_detection: EOILastDetectionInfo;
     public alerting: boolean;
+    public rest_url: string;
 
-    constructor(public image_notification: boolean, public phone_number: string | null = null) { }
+    constructor(public phone_number: string | null = null,
+        public image_notification: boolean
+    ) { }
 
     public static fromJsonObj(obj: any): EOINotification | undefined {
         let notification;
-        
+
         if (obj != null) {
             notification = new EOINotification(
-                obj.image_notification,
-                obj.phone_number);
+                obj.phone_number,
+                obj.image_notification);
 
+            if (obj.rest_url != null) {
+                notification.rest_url = obj.rest_url;
+            }
+    
             if (obj.last_detection != null) {
-                notification.last_detection = EOIAlertDetection.fromJsonObj(obj.last_detection);
+                notification.last_detection = EOILastDetectionInfo.fromJsonObj(obj.last_detection);
             }
 
             if (obj.alerting != null) {

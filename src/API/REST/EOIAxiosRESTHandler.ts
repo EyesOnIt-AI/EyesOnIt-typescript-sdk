@@ -18,6 +18,7 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
             eoiResponse.data = response.data.data;
         }).catch(async (error: any) => {
             this.logger.error(`EOIAxiosRESTHandler.get error: ${JSON.stringify(error.response?.data)}`);
+            eoiResponse = new EOIResponse(false, error.message);
         });
 
         if (eoiResponse == null) {
@@ -35,6 +36,7 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
             eoiResponse.data = response.data.data;
         }).catch(async (error: any) => {
             this.logger.error(`EOIAxiosRESTHandler.post error: ${JSON.stringify(error.response?.data)}`);
+            eoiResponse = new EOIResponse(false, error.message);
         });
 
         if (eoiResponse == null) {

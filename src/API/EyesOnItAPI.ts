@@ -1,5 +1,7 @@
-import axios, * as others from 'axios';
 
+import { ExceptionUtil } from '../utils/exceptionUtil';
+import { JSONUtil } from '../utils/JSONUtil';
+import { Logger } from '../utils/logger';
 import { EOIResponse } from "./eoiResponse";
 import { EOIAddStreamInputs } from './inputs/eoiAddStreamInputs';
 import { EOIMonitorStreamInputs } from './inputs/eoiMonitorStreamInputs';
@@ -7,20 +9,17 @@ import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
 import { EOIValidation } from './inputs/eoiValidation';
 import { EOIAddStreamResponse } from './outputs/eoiAddStreamResponse';
-import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionInfoResponse';
 import { EOIGetAllStreamsInfoResponse } from './outputs/eoiGetAllStreamsInfoResponse';
+import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionInfoResponse';
+import { EOIGetStreamDetailsResponse } from './outputs/eoiGetStreamDetailsResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
 import { EOIProcessVideosResponse } from './outputs/eoiProcessVideosResponse';
 import { EOIRemoveStreamResponse } from './outputs/eoiRemoveStreamResponse';
 import { EOIStopMonitoringStreamResponse } from './outputs/eoiStopMonitoringStreamResponse';
-import { JSONUtil } from '../utils/JSONUtil';
-import { ExceptionUtil } from '../utils/exceptionUtil';
-import { Logger } from '../utils/logger';
-import { EOIGetStreamDetailsResponse } from './outputs/eoiGetStreamDetailsResponse';
-import { IEOIRESTHandler } from './REST/IEOIRESTHandler';
 import { EOIAxiosRESTHandler } from './REST/EOIAxiosRESTHandler';
+import { IEOIRESTHandler } from './REST/IEOIRESTHandler';
 
 export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
@@ -32,7 +31,6 @@ export class EyesOnItAPI {
     private static readonly getAllStreamsInfoPath = "/get_all_streams_info";
     private static readonly getStreamDetailsPath = "/get_stream_details";
     private static readonly getLastDetectionInfoPath = "/get_last_detection_info";
-    private static readonly getPreviewFramePath = "/get_preview_video_frame";
     private static readonly getVideoFramePath = "/get_video_frame";
 
     private logger;
@@ -286,27 +284,6 @@ export class EyesOnItAPI {
         }
 
         return getLastDetectionInfoResponse;
-    }
-
-    public async getPreviewVideoFrame(streamUrl: string): Promise<EOIGetVideoFrameResponse> {
-        let getPreviewFrameResponse = new EOIGetVideoFrameResponse(EOIValidation.validateStreamUrl(streamUrl));
-
-        if (getPreviewFrameResponse.success) {
-            const logPrefix = `${this.constructor.name}.getPreviewFrame`;
-            let endPoint = `${this.apiBasePath}${EyesOnItAPI.getPreviewFramePath}`;
-
-            const body: any = { stream_url: streamUrl };
-            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
-
-            try {
-                const response = await this.doPost(endPoint, body, logPrefix);
-                getPreviewFrameResponse = new EOIGetVideoFrameResponse(response);
-            } catch (error) {
-                getPreviewFrameResponse = new EOIGetVideoFrameResponse(this.handleError(error));
-            }
-        }
-
-        return getPreviewFrameResponse;
     }
 
     public async getVideoFrame(streamUrl: string): Promise<EOIGetVideoFrameResponse> {
