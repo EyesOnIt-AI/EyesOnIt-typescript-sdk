@@ -1,5 +1,6 @@
 import { EOIEffects } from "../elements/eoiEffects";
 import { EOILine } from "../elements/eoiLine";
+import { EOIRecording } from "../elements/eoiRecording";
 import { EOIRegion } from "../elements/eoiRegion";
 import { EOIResponse } from "../eoiResponse";
 import { EOIBaseInputs } from "./eoiBaseInputs";
@@ -16,6 +17,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
         public real_time: boolean = false,
         public output_all_frames: boolean = true,
         public effects: EOIEffects | undefined,
+        public recording: EOIRecording | undefined,
         public start_seconds: number,
         public end_seconds: number) {
         super(regions);
@@ -31,6 +33,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
             obj.real_time,
             obj.output_all_frames,
             EOIEffects.fromJsonObj(obj.effects),
+            EOIRecording.fromJsonObj(obj.recording),
             obj.start_seconds,
             obj.end_seconds);
 
