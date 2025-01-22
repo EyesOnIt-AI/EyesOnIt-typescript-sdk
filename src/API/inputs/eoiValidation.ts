@@ -106,6 +106,14 @@ export class EOIValidation {
             response = this.validateLines(inputs.lines);
         }
 
+        if (response.success) {
+            const nameTrimmed = inputs.name == null ? null : inputs.name.trim();
+
+            if (nameTrimmed == null || nameTrimmed.length < EOIValidation.MIN_STREAM_NAME_LENGTH) {
+                response = new EOIResponse(false, `the video name must be specified. video name = ${nameTrimmed}`);
+            }
+        }
+
         // TODO: fill this in
         if (response.success && inputs.frame_rate < EOIValidation.MIN_FRAME_RATE) {
             response = new EOIResponse(false, `the minimum frame rate is ${EOIValidation.MIN_FRAME_RATE}. frame rate = ${inputs.frame_rate}`);

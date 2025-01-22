@@ -7,7 +7,7 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
     private logger;
 
     constructor(private customLogger?: any) {
-        this.logger = customLogger || new Logger();
+        this.logger = this.customLogger || new Logger();
     }
 
     public async get(endPoint: string): Promise<EOIResponse> {
@@ -18,6 +18,7 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
             eoiResponse.data = response.data.data;
         }).catch(async (error: any) => {
             this.logger.error(`EOIAxiosRESTHandler.get error: ${JSON.stringify(error.response?.data)}`);
+            console.log(`EOIAxiosRESTHandler.get error: ${JSON.stringify(error.response?.data)}`);
             eoiResponse = new EOIResponse(false, error.message);
         });
 
@@ -31,11 +32,12 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
     public async post(endPoint: string, body: string, headers: any): Promise<EOIResponse> {
         let eoiResponse: EOIResponse | null = null;
 
-        await axios.post(endPoint, body, { headers: headers }).then(async (response: any) => {
+        await axios.post(endPoint, body, { headers: headers/*, timeout: 5000*/ }).then(async (response: any) => {
             eoiResponse = new EOIResponse(response.data.success, response.data.message);
             eoiResponse.data = response.data.data;
         }).catch(async (error: any) => {
             this.logger.error(`EOIAxiosRESTHandler.post error: ${JSON.stringify(error.response?.data)}`);
+            console.log(`EOIAxiosRESTHandler.post error: ${JSON.stringify(error.response?.data)}`);
             eoiResponse = new EOIResponse(false, error.message);
         });
 
