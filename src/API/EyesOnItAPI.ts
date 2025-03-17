@@ -243,6 +243,9 @@ export class EyesOnItAPI {
         this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
 
         const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response: ${JSON.stringify(eoiResponse)}`);
+
         eoiGetAllStreamsInfoResponse = new EOIGetAllStreamsInfoResponse(eoiResponse);
 
         return eoiGetAllStreamsInfoResponse;

@@ -5,8 +5,7 @@ export class EOINotification {
     public alerting: boolean;
     public rest_url: string;
 
-    constructor(public phone_number: string | null = null,
-        public image_notification: boolean
+    constructor(public phone_number: string | null = null, public image_notification: boolean
     ) { }
 
     public static fromJsonObj(obj: any): EOINotification | undefined {

@@ -24,7 +24,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
         super(regions);
     }
 
-    public static fromJsonObj(obj: any): EOIProcessVideoInputs | null {
+    public static fromJsonObj(obj: any): EOIProcessVideoInputs {
         let inputs = new EOIProcessVideoInputs(obj.name, 
             obj.input_video_path_list, 
             obj.output_video_path,
@@ -39,7 +39,13 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
             obj.end_seconds,
             obj.plugins);
 
-        return EOIValidation.validateProcessVideoInputs(inputs).success ? inputs : null;
+        let response = EOIValidation.validateProcessVideoInputs(inputs)
+
+        if (!response.success) {
+            throw new Error(response.message);
+        }
+
+        return inputs;
     }
 
     public stringify(): string {

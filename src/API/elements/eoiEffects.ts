@@ -4,7 +4,8 @@ export class EOIEffects {
         public show_bounding_boxes: boolean,
         public show_lines: boolean,
         public show_regions: boolean,
-        public show_confidence_levels: boolean) { }
+        public show_confidence_levels: boolean,
+        public show_alert_text: boolean) { }
 
     public static fromJsonObj(obj: any) {
         let effects;
@@ -15,7 +16,8 @@ export class EOIEffects {
                 obj.show_bounding_boxes,
                 obj.show_lines,
                 obj.show_regions,
-                obj.show_confidence_levels);
+                obj.show_confidence_levels,
+                obj.show_alert_text);
         }
 
         return effects;
