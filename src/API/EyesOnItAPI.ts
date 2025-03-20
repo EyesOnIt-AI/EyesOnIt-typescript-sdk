@@ -105,7 +105,15 @@ export class EyesOnItAPI {
             // set up request endpoint and body
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.processImagePath}`;
 
-            const body: any = JSON.parse(inputs.stringify());
+            // copy fields except base64image
+            const jsonString = JSON.stringify(inputs, (key, value) => {
+                if (key === 'base64Image') {
+                    return undefined;
+                }
+                return value;
+            });
+            const body: any = JSON.parse(jsonString);
+
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
             body.file = inputs.base64Image;

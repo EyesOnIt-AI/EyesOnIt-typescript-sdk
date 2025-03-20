@@ -8,6 +8,7 @@ export class EOIRecording {
         public save_image: boolean, 
         public save_with_detection: boolean, 
         public save_with_motion: boolean, 
+        public save_detection_data: boolean, 
         public save_original_copy: boolean, 
         public recording_folder: string) { }
 
@@ -24,6 +25,7 @@ export class EOIRecording {
                 obj.save_image,
                 obj.save_with_detection,
                 obj.save_with_motion,
+                obj.save_detection_data,
                 obj.save_original_copy,
                 obj.recording_folder);
         }
