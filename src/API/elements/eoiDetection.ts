@@ -5,7 +5,7 @@ export class EOIDetection {
     constructor() {
     }
 
-    public parseSuperClassFields(obj: any) {
+    protected parseSuperClassFields(obj: any) {
         if (obj != null) {
             this.region = obj.region;
             this.class_name = obj.class_name;

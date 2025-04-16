@@ -25,8 +25,24 @@ export class EOIImageDetection extends EOIDetection {
         return this.objects;
     }
 
+    public getMaxConfidenceForDescription(description: string): number | null {
+        let maxConfidence: number | null = null;
+
+        for (let object of this.objects) {
+            let confidence = object.getConfidenceForDescription(description);
+
+            if (confidence != null) {
+                if (!maxConfidence || confidence > maxConfidence) {
+                    maxConfidence = confidence;
+                }
+            }
+        }
+
+        return maxConfidence;
+    }
+
     public getMaxConfidenceDescription(): string | null {
-        let maxConfidence = 0;
+        let maxConfidence = -1;
         let maxConfidenceDescription = null;
 
         for (let object of this.objects) {

@@ -1,4 +1,5 @@
 import { EOIDetectionCondition } from "./eoiDetectionCondition";
+import { EOIDetectionObject } from "./eoiDetectionObject";
 import { EOIObjectDescription } from "./eoiObjectDescription";
 
 export class EOIDetectionConfig {
@@ -9,6 +10,7 @@ export class EOIDetectionConfig {
     public conditions?: EOIDetectionCondition[];
     public alert_seconds?: number = 0.1
     public reset_seconds?: number = 0.1;
+    public objects?: EOIDetectionObject[];
 
     constructor(init?: Partial<EOIDetectionConfig>) { 
     }
@@ -25,6 +27,7 @@ export class EOIDetectionConfig {
             detection_config.conditions = obj.conditions?.map(EOIDetectionCondition.fromJsonObj),
             detection_config.alert_seconds = obj.alert_seconds,
             detection_config.reset_seconds = obj.reset_seconds;
+            detection_config.objects = obj.objects?.map(EOIDetectionObject.fromJsonObj);
         }
         else {
             detection_config = EOIDetectionConfig.default();

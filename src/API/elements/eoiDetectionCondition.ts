@@ -23,4 +23,30 @@ export class EOIDetectionCondition {
 
         return detection;
     }
+
+    public getMaxConfidenceDescription(): [string, number] | null {
+        let maxConfidence = -1;
+        let maxConfidenceDescription: string | null = null;
+
+        if (this.objects != null) {
+            for (const obj of this.objects) {
+                let response = obj.getMaxConfidenceDescription()
+
+                if (response != null) {
+                    let [description, confidence] = response;
+                    if (confidence > maxConfidence) {
+                        maxConfidence = confidence;
+                        maxConfidenceDescription = description;
+                    }
+                }
+            }
+        }
+
+        if (maxConfidenceDescription != null) {
+            return [maxConfidenceDescription, maxConfidence]
+        }
+        else {
+            return null;
+        }
+    }
 }

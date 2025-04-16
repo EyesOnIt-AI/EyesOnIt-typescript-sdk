@@ -5,6 +5,7 @@ export class EOIEffects {
         public show_lines: boolean,
         public show_regions: boolean,
         public show_confidence_levels: boolean,
+        public show_object_count: boolean,
         public show_alert_text: boolean) { }
 
     public static fromJsonObj(obj: any) {
@@ -17,6 +18,7 @@ export class EOIEffects {
                 obj.show_lines,
                 obj.show_regions,
                 obj.show_confidence_levels,
+                obj.show_object_count,
                 obj.show_alert_text);
         }
 

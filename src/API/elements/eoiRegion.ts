@@ -31,11 +31,6 @@ export class EOIRegion {
         region.polygon = obj.polygon?.map(EOIVertex.fromJsonObj);
         region.detection_configs = obj.detection_configs?.map(EOIDetectionConfig.fromJsonObj);
 
-        if (region.detection_configs == null || region.detection_configs?.length == 0) {
-            let newDetectionConfig = EOIDetectionConfig.default();
-            region.detection_configs = [ newDetectionConfig ];
-        }
-
         region.motion_detection = EOIMotionDetection.fromJsonObj(obj.motion_detection);
 
         if (region.motion_detection == null) {
