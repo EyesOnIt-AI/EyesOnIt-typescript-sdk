@@ -2,7 +2,7 @@ import { EOINotification } from "../elements/eoiNotification";
 import { EOIBaseInputs } from "./eoiBaseInputs";
 import { EOIResponse } from "../eoiResponse";
 import { EOIRegion } from "../elements/eoiRegion";
-import { EOIValidation } from "./eoiValidation";
+import { EOIValidator } from "../eoiValidator";
 import { EOIRecording } from "../elements/eoiRecording";
 import { EOIEffects } from "../elements/eoiEffects";
 import { EOILine } from "../elements/eoiLine";
@@ -12,6 +12,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         public stream_url: string, 
         public name: string, 
         public frame_rate: number = 5,
+        public index_for_search: boolean,
+        public search_index_types: string[] = [],
         public regions: EOIRegion[],
         public lines: EOILine[] | undefined,
         public notification: EOINotification | undefined,
@@ -24,13 +26,15 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         let inputs = new EOIAddStreamInputs(obj.stream_url, 
             obj.name,
             obj.frame_rate,
+            obj.index_for_search,
+            obj.search_index_types,
             obj.regions?.map(EOIRegion.fromJsonObj),
             obj.lines?.map(EOILine.fromJsonObj),
             EOINotification.fromJsonObj(obj.notification),
             EOIRecording.fromJsonObj(obj.recording),
             EOIEffects.fromJsonObj(obj.effects));
 
-        return EOIValidation.validateAddStreamInputs(inputs).success ? inputs : null;
+        return EOIValidator.validateAddStreamInputs(inputs).success ? inputs : null;
     }
 
     public stringify(): string {
@@ -43,6 +47,6 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
     }
 
     public validate(): EOIResponse {
-        return EOIValidation.validateAddStreamInputs(this);
+        return EOIValidator.validateAddStreamInputs(this);
     }
 }

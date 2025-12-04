@@ -4,20 +4,27 @@ import { JSONUtil } from '../utils/JSONUtil';
 import { Logger } from '../utils/logger';
 import { EOIResponse } from "./eoiResponse";
 import { EOIAddStreamInputs } from './inputs/eoiAddStreamInputs';
+import { EOICancelLiveSearchInputs } from './inputs/eoiCancelLiveSearchInputs';
+import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
 import { EOIMonitorStreamInputs } from './inputs/eoiMonitorStreamInputs';
 import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
-import { EOIValidation } from './inputs/eoiValidation';
+import { EOISearchInputs } from './inputs/eoiSearchInputs';
+import { EOISimilaritySearchInputs } from './inputs/eoiSimilaritySearchInputs';
+import { EOIValidator } from './eoiValidator';
 import { EOIAddStreamResponse } from './outputs/eoiAddStreamResponse';
 import { EOIGetAllStreamsInfoResponse } from './outputs/eoiGetAllStreamsInfoResponse';
 import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionInfoResponse';
 import { EOIGetStreamDetailsResponse } from './outputs/eoiGetStreamDetailsResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
+import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
 import { EOIProcessVideosResponse } from './outputs/eoiProcessVideosResponse';
 import { EOIRemoveStreamResponse } from './outputs/eoiRemoveStreamResponse';
+import { EOISearchResponse } from './outputs/eoiSearchResponse';
 import { EOIStopMonitoringStreamResponse } from './outputs/eoiStopMonitoringStreamResponse';
+import { EOIUpdateConfigResponse } from './outputs/eoiUpdateConfigResponse';
 import { EOIAxiosRESTHandler } from './REST/EOIAxiosRESTHandler';
 import { IEOIRESTHandler } from './REST/IEOIRESTHandler';
 
@@ -32,6 +39,11 @@ export class EyesOnItAPI {
     private static readonly getStreamDetailsPath = "/get_stream_details";
     private static readonly getLastDetectionInfoPath = "/get_last_detection_info";
     private static readonly getVideoFramePath = "/get_video_frame";
+    private static readonly searchPath = "/search";
+    private static readonly similaritySearchPath = "/similarity_search";
+    private static readonly liveSearchPath = "/live_search";
+    private static readonly cancelLiveSearchPath = "/cancel_live_search";
+    private static readonly updateConfigPath = "/update_config";
 
     private logger;
 
@@ -93,7 +105,7 @@ export class EyesOnItAPI {
 
     public async processImage(inputs: EOIProcessImageInputs): Promise<EOIProcessImageResponse> {
         let logPrefix = `${this.constructor.name}.processImage`;
-        let processImageResponse: EOIProcessImageResponse = new EOIProcessImageResponse(EOIValidation.validateProcessImageInputs(inputs));
+        let processImageResponse: EOIProcessImageResponse = new EOIProcessImageResponse(EOIValidator.validateProcessImageInputs(inputs));
 
         if (processImageResponse.success) {
             if (inputs.base64Image == null || inputs.base64Image.length == 0) {
@@ -123,7 +135,7 @@ export class EyesOnItAPI {
 
     public async addStream(inputs: EOIAddStreamInputs): Promise<EOIAddStreamResponse> {
         let logPrefix = `${this.constructor.name}.addStream`;
-        let addStreamResponse: EOIAddStreamResponse = new EOIAddStreamResponse(EOIValidation.validateAddStreamInputs(inputs));
+        let addStreamResponse: EOIAddStreamResponse = new EOIAddStreamResponse(EOIValidator.validateAddStreamInputs(inputs));
 
         if (addStreamResponse.success) {
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.addStreamPath}`;
@@ -145,7 +157,7 @@ export class EyesOnItAPI {
 
     public async processVideo(inputs: EOIProcessVideoInputs): Promise<EOIProcessVideosResponse> {
         let logPrefix = `${this.constructor.name}.processVideo`;
-        let processVideosResponse: EOIProcessVideosResponse = new EOIProcessVideosResponse(EOIValidation.validateProcessVideoInputs(inputs));
+        let processVideosResponse: EOIProcessVideosResponse = new EOIProcessVideosResponse(EOIValidator.validateProcessVideoInputs(inputs));
 
         if (processVideosResponse.success) {
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.processVideosPath}`;
@@ -166,7 +178,7 @@ export class EyesOnItAPI {
     }
 
     public async removeStream(streamUrl: string): Promise<EOIRemoveStreamResponse> {
-        let removeStreamResponse: EOIRemoveStreamResponse = new EOIRemoveStreamResponse(EOIValidation.validateStreamUrl(streamUrl));
+        let removeStreamResponse: EOIRemoveStreamResponse = new EOIRemoveStreamResponse(EOIValidator.validateStreamUrl(streamUrl));
 
         if (removeStreamResponse.success) {
             const logPrefix = `${this.constructor.name}.removeStream`;
@@ -187,7 +199,7 @@ export class EyesOnItAPI {
     }
 
     public async monitorStream(inputs: EOIMonitorStreamInputs): Promise<EOIMonitorStreamResponse> {
-        let monitorStreamResponse = new EOIMonitorStreamResponse(EOIValidation.validateMonitorStreamInputs(inputs));
+        let monitorStreamResponse = new EOIMonitorStreamResponse(EOIValidator.validateMonitorStreamInputs(inputs));
 
         if (monitorStreamResponse.success) {
             const logPrefix = `${this.constructor.name}.monitorStream`;
@@ -213,7 +225,7 @@ export class EyesOnItAPI {
     }
 
     public async stopMonitoringStream(streamUrl: string): Promise<EOIStopMonitoringStreamResponse> {
-        let stopMonitorStreamResponse = new EOIStopMonitoringStreamResponse(EOIValidation.validateStreamUrl(streamUrl));
+        let stopMonitorStreamResponse = new EOIStopMonitoringStreamResponse(EOIValidator.validateStreamUrl(streamUrl));
 
         if (stopMonitorStreamResponse.success) {
             const logPrefix = `${this.constructor.name}.stopMonitoringStream`;
@@ -252,7 +264,7 @@ export class EyesOnItAPI {
     }
 
     public async getStreamDetails(streamUrl: string): Promise<EOIGetStreamDetailsResponse> {
-        let eoiGetStreamDetailsResponse = new EOIGetStreamDetailsResponse(EOIValidation.validateStreamUrl(streamUrl));
+        let eoiGetStreamDetailsResponse = new EOIGetStreamDetailsResponse(EOIValidator.validateStreamUrl(streamUrl));
 
         if (eoiGetStreamDetailsResponse.success) {
             const logPrefix = `${this.constructor.name}.getStreamDetails`;
@@ -269,7 +281,7 @@ export class EyesOnItAPI {
     }
 
     public async getLastDetectionInfo(streamUrl: string): Promise<EOIGetLastDetectionInfoResponse> {
-        let getLastDetectionInfoResponse = new EOIGetLastDetectionInfoResponse(EOIValidation.validateStreamUrl(streamUrl));
+        let getLastDetectionInfoResponse = new EOIGetLastDetectionInfoResponse(EOIValidator.validateStreamUrl(streamUrl));
 
         if (getLastDetectionInfoResponse.success) {
             const logPrefix = `${this.constructor.name}.getLastDetectionInfo`;
@@ -290,7 +302,7 @@ export class EyesOnItAPI {
     }
 
     public async getVideoFrame(streamUrl: string): Promise<EOIGetVideoFrameResponse> {
-        let getVideoFrameResponse = new EOIGetVideoFrameResponse(EOIValidation.validateStreamUrl(streamUrl));
+        let getVideoFrameResponse = new EOIGetVideoFrameResponse(EOIValidator.validateStreamUrl(streamUrl));
 
         if (getVideoFrameResponse.success) {
             const logPrefix = `${this.constructor.name}.getVideoFrame`;
@@ -308,6 +320,116 @@ export class EyesOnItAPI {
         }
 
         return getVideoFrameResponse;
+    }
+
+    public async search(inputs: EOISearchInputs): Promise<EOISearchResponse> {
+        let logPrefix = `${this.constructor.name}.search`;
+        let searchResponse: EOISearchResponse = new EOISearchResponse(EOIValidator.validateSearchInputs(inputs));
+
+        if (searchResponse.success) {
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.searchPath}`;
+
+            const body: any = inputs;
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                searchResponse = new EOISearchResponse(response);
+            } catch (error) {
+                searchResponse = new EOISearchResponse(this.handleError(error));
+            }
+        }
+
+        return searchResponse;
+    }
+
+    public async similaritySearch(inputs: EOISimilaritySearchInputs): Promise<EOISearchResponse> {
+        let logPrefix = `${this.constructor.name}.similaritySearch`;
+        let searchResponse: EOISearchResponse = new EOISearchResponse(EOIValidator.validateSimilaritySearchInputs(inputs));
+
+        if (searchResponse.success) {
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.similaritySearchPath}`;
+
+            const body: any = inputs;
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                searchResponse = new EOISearchResponse(response);
+            } catch (error) {
+                searchResponse = new EOISearchResponse(this.handleError(error));
+            }
+        }
+
+        return searchResponse;
+    }
+
+    public async liveSearch(inputs: EOILiveSearchInputs): Promise<EOILiveSearchResponse> {
+        let logPrefix = `${this.constructor.name}.liveSearch`;
+        let liveSearchResponse: EOILiveSearchResponse = new EOILiveSearchResponse(EOIValidator.validateLiveSearchInputs(inputs));
+
+        if (liveSearchResponse.success) {
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.liveSearchPath}`;
+
+            const body: any = inputs;
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                liveSearchResponse = new EOILiveSearchResponse(response);
+            } catch (error) {
+                liveSearchResponse = new EOILiveSearchResponse(this.handleError(error));
+            }
+        }
+
+        return liveSearchResponse;
+    }
+
+    public async cancelLiveSearch(inputs: EOICancelLiveSearchInputs): Promise<EOIResponse> {
+        let logPrefix = `${this.constructor.name}.cancelLiveSearch`;
+        let cancelLiveSearchResponse: EOIResponse = EOIValidator.validateCancelLiveSearchInputs(inputs);
+
+        if (cancelLiveSearchResponse.success) {
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.cancelLiveSearchPath}`;
+
+            const body: any = inputs;
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                cancelLiveSearchResponse = response;
+            } catch (error) {
+                cancelLiveSearchResponse = this.handleError(error);
+            }
+        }
+
+        return cancelLiveSearchResponse;
+    }
+
+    public async updateConfig(inputs: any): Promise<EOIUpdateConfigResponse> {
+        let logPrefix = `${this.constructor.name}.updateConfig`;
+        let updateConfigResponse: EOIUpdateConfigResponse = new EOIUpdateConfigResponse(EOIResponse.success());
+
+        if (updateConfigResponse.success) {
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.updateConfigPath}`;
+
+            const body: any = inputs;
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                updateConfigResponse = new EOIUpdateConfigResponse(response);
+            } catch (error) {
+                updateConfigResponse = new EOIUpdateConfigResponse(this.handleError(error));
+            }
+        }
+
+        return updateConfigResponse;
     }
 
     private async doGet(endPoint: string): Promise<EOIResponse> {

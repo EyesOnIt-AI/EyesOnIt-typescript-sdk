@@ -6,6 +6,8 @@ export class EOIDetectionConfig {
     public class_name?: string | null;
     public class_threshold?: number | null = 10;
     public object_size?: number = 100;
+    public min_contour_area?: number | null = null;
+    public max_bounding_box_area?: number | null = null;
     public object_descriptions: EOIObjectDescription[];
     public conditions?: EOIDetectionCondition[];
     public alert_seconds?: number = 0.1
@@ -23,6 +25,8 @@ export class EOIDetectionConfig {
             detection_config.class_name = obj.class_name;
             detection_config.class_threshold = obj.class_threshold,
             detection_config.object_size = obj.object_size,
+            detection_config.min_contour_area = obj.min_contour_area,
+            detection_config.max_bounding_box_area = obj.max_bounding_box_area,
             detection_config.object_descriptions = obj.object_descriptions?.map(EOIObjectDescription.fromJsonObj),
             detection_config.conditions = obj.conditions?.map(EOIDetectionCondition.fromJsonObj),
             detection_config.alert_seconds = obj.alert_seconds,
@@ -41,6 +45,8 @@ export class EOIDetectionConfig {
         detection_config.class_name = null;
         detection_config.class_threshold = null;
         detection_config.object_size = 100;
+        detection_config.min_contour_area = null;
+        detection_config.max_bounding_box_area = null;
         detection_config.object_descriptions = [];
         detection_config.alert_seconds = 5;
         detection_config.reset_seconds = 10;

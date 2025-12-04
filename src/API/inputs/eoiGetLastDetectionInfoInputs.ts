@@ -1,11 +1,11 @@
 import { EOIResponse } from "../eoiResponse";
-import { EOIValidation } from "./eoiValidation";
+import { EOIValidator } from "../eoiValidator";
 
 export class EOIGetLastDetectionInfoInputs {
     constructor(public streamUrl: string) {
     }
 
     public validate(): EOIResponse {
-        return EOIValidation.validateGetLastDetectionInfoInputs(this);
+        return EOIValidator.validateGetLastDetectionInfoInputs(this);
     }
 }

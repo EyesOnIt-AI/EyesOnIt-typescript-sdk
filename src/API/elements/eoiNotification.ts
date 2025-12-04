@@ -5,7 +5,7 @@ export class EOINotification {
     public alerting: boolean;
     public rest_url: string;
 
-    constructor(public phone_number: string | null = null, public image_notification: boolean
+    constructor(public phone_number: string | null = null, public include_image: boolean
     ) { }
 
     public static fromJsonObj(obj: any): EOINotification | undefined {
@@ -14,7 +14,7 @@ export class EOINotification {
         if (obj != null) {
             notification = new EOINotification(
                 obj.phone_number,
-                obj.image_notification);
+                obj.include_image);
 
             if (obj.rest_url != null) {
                 notification.rest_url = obj.rest_url;
@@ -35,11 +35,11 @@ export class EOINotification {
     public toJSON() {
         if (this.phone_number == null || this.phone_number.trim().length == 0) {
             return {
-                image_notification: this.image_notification
+                include_image: this.include_image
             };
         } else {
             return {
-                image_notification: this.image_notification,
+                include_image: this.include_image,
                 phone_number: this.phone_number
             };
         }

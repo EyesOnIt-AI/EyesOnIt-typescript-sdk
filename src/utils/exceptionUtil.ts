@@ -31,4 +31,23 @@ export class ExceptionUtil {
     public static getErrorMessage(error: unknown) {
         return ExceptionUtil.toErrorWithMessage(error).message
     }
+
+    public static writeExceptionToConsole(error: unknown) {
+        if (typeof error === 'object' && error !== null && 'stack' in error) {
+            console.error(`Error: ${error.stack}`);
+        }
+        else {
+            let message = ExceptionUtil.getErrorMessage(error);
+            console.error(`Error: ${message}. Stack trace not available.`);
+        }
+    }
+
+    public static logException(logger: any, error: unknown) {
+        let message = ExceptionUtil.getErrorMessage(error);
+        logger.error(`Error: ${message}`);
+
+        if (typeof error === 'object' && error !== null && 'stack' in error) {
+            logger.error(`Error stack trace: ${error.stack}`);
+        }
+    }
 }

@@ -1,11 +1,11 @@
 import { EOIResponse } from "../eoiResponse";
-import { EOIValidation } from "./eoiValidation";
+import { EOIValidator } from "../eoiValidator";
 
 export class EOIPreviewFrameInputs {
     constructor(public streamUrl: string) {
     }
 
     public validate(): EOIResponse {
-        return EOIValidation.validateGetPreviewFrameInputs(this);
+        return EOIValidator.validateGetPreviewFrameInputs(this);
     }
 }

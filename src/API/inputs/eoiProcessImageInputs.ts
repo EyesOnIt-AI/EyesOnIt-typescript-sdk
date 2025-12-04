@@ -1,7 +1,7 @@
 import { EOIBaseInputs } from "./eoiBaseInputs";
 import { EOIResponse } from "../eoiResponse";
 import { EOIRegion } from "../elements/eoiRegion";
-import { EOIValidation } from "./eoiValidation";
+import { EOIValidator } from "../eoiValidator";
 import { EOIEffects } from "../elements/eoiEffects";
 
 export class EOIProcessImageInputs extends EOIBaseInputs {
@@ -39,6 +39,6 @@ export class EOIProcessImageInputs extends EOIBaseInputs {
     }
 
     public validate(): EOIResponse {
-        return EOIValidation.validateProcessImageInputs(this);
+        return EOIValidator.validateProcessImageInputs(this);
     }
 }

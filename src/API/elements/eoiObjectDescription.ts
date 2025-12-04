@@ -1,4 +1,6 @@
 export class EOIObjectDescription {
+    public display_text: string;
+
     constructor(
         public text: string, 
         public background_prompt: boolean = false,
@@ -17,6 +19,8 @@ export class EOIObjectDescription {
             obj.over_threshold
         );
 
+        object_description.display_text = obj.display_text;
+
         return object_description;
     }
 
@@ -32,7 +36,8 @@ export class EOIObjectDescription {
                 text: this.text,
                 background_prompt: this.background_prompt,
                 threshold: this.threshold,
-                alert: this.alert
+                alert: this.alert,
+                display_text: this.display_text
             };
         }
     }

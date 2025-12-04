@@ -7,6 +7,8 @@ export class EOIStreamInfo {
     public stream_url: string;
     public name: string;
     public frame_rate: number;
+    public index_for_search: boolean;
+    public search_index_types: string[];
     public status: string;
     public regions: EOIRegion[];
     public lines: EOILine[];
@@ -25,6 +27,8 @@ export class EOIStreamInfo {
         this.name = obj.name;
         this.status = obj.status;
         this.frame_rate = obj.frame_rate;
+        this.index_for_search = obj.index_for_search;
+        this.search_index_types = obj.search_index_types;
 
         this.regions = obj.regions != null ? obj.regions.map(EOIRegion.fromJsonObj) : [];
         this.lines = obj.lines != null ? obj.lines.map(EOILine.fromJsonObj) : [];

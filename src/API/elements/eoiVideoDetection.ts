@@ -6,14 +6,18 @@ import { EOIDetection } from "./eoiDetection";
 
 export class EOIVideoDetection extends EOIDetection {
     public stream_url: string;
+    public stream_name: string;
+    public event: string;
     public time: DateTime;
+    public frame_num: number;
+    public object_description: string;
     public condition?: EOIDetectionCondition;
 
     constructor() {
         super();
     }
 
-    public static fromJsonObj(obj: any): EOIDetection | undefined {
+    public static fromJsonObj(obj: any): EOIVideoDetection | undefined {
         let detection;
 
         if (obj != null) {

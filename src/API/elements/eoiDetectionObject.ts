@@ -5,7 +5,9 @@ export class EOIDetectionObject {
     constructor(
         public object_descriptions: EOIObjectDescription[], 
         public class_confidence: number, 
-        public bounds?: EOIBoundingBox) { }
+        public bounds?: EOIBoundingBox,
+        public image?: string) { }
+        
 
     public static fromJsonObj(obj: any) {
         let object_descriptions: EOIObjectDescription[] = [];
@@ -20,7 +22,8 @@ export class EOIDetectionObject {
         return new EOIDetectionObject(
             object_descriptions,
             obj.class_confidence,
-            EOIBoundingBox.fromJsonObj(obj.bounds));
+            EOIBoundingBox.fromJsonObj(obj.bounds),
+            obj.image);
     }
 
     public getConfidenceForDescription(description: string): number | null {
