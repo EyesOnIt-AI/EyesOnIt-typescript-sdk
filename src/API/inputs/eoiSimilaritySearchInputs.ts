@@ -2,7 +2,7 @@ import { EOIResponse } from "../eoiResponse";
 import { EOIValidator } from "../eoiValidator";
 
 export class EOISimilaritySearchInputs {
-    constructor(public seed_id: string) {
+    constructor(public seed_id: string | undefined) {
         
     }
 

@@ -5,6 +5,7 @@ import { EOIValidator } from "../eoiValidator";
 export class EOILiveSearchInputs {
     constructor(public class_name: string, 
         public object_description: string, 
+        public seed_id: string | undefined,
         public alert_threshold: number, 
         public duration_seconds: number | undefined, 
         public notification: EOINotification | undefined) {
@@ -12,7 +13,7 @@ export class EOILiveSearchInputs {
     }
 
     public static fromJsonObj(obj: any): EOILiveSearchInputs | null {
-        let inputs = new EOILiveSearchInputs(obj.class_name, obj.object_description, obj.threshold, obj.duration_seconds, EOINotification.fromJsonObj(obj.notification));
+        let inputs = new EOILiveSearchInputs(obj.class_name, obj.object_description, obj.seed_id, obj.threshold, obj.duration_seconds, EOINotification.fromJsonObj(obj.notification));
 
         return EOIValidator.validateLiveSearchInputs(inputs).success ? inputs : null;
     }

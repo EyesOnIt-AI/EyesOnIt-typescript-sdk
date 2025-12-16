@@ -41,6 +41,8 @@ export class EOIValidator {
     private static MIN_LINE_VERTEX_COUNT = 2;
     private static COUNT_CONDITION_TYPES = ["count_equals", "count_greater_than", "count_less_than"];
     private static LINE_CROSS_CONDITION_TYPES = ["line_cross"];
+    private static MIN_SEARCH_DATE_ISO = "2020-01-01T00:00:00Z";
+    private static MIN_SEARCH_DATE = new Date(EOIValidator.MIN_SEARCH_DATE_ISO);
 
     private static validateBaseInputs(inputs: EOIBaseInputs, lines: EOILine[] | undefined, validateForVideo: boolean): EOIResponse {
         let response: EOIResponse = inputs == null ?
@@ -200,6 +202,10 @@ export class EOIValidator {
             }
         }
 
+        if (response.success) {
+            response = this.validateSearchDateRange(inputs.start_date_time, inputs.end_date_time);
+        }
+
         return response;
     }
 
@@ -215,6 +221,47 @@ export class EOIValidator {
         }
 
         return response;
+    }
+
+    private static validateSearchDateRange(start_date_time?: string | null, end_date_time?: string | null): EOIResponse {
+        const startDateText = start_date_time == null ? null : start_date_time.trim();
+        const endDateText = end_date_time == null ? null : end_date_time.trim();
+
+        const startProvided = startDateText != null && startDateText.length > 0;
+        const endProvided = endDateText != null && endDateText.length > 0;
+
+        let startDate: Date | null = null;
+        let endDate: Date | null = null;
+
+        if (startProvided) {
+            startDate = new Date(startDateText as string);
+
+            if (isNaN(startDate.getTime())) {
+                return new EOIResponse(false, `start_date_time must be a valid date time string. start_date_time = ${startDateText}`);
+            }
+
+            if (startDate.getTime() < EOIValidator.MIN_SEARCH_DATE.getTime()) {
+                return new EOIResponse(false, `start_date_time must be on or after ${EOIValidator.MIN_SEARCH_DATE_ISO}. start_date_time = ${startDateText}`);
+            }
+        }
+
+        if (endProvided) {
+            endDate = new Date(endDateText as string);
+
+            if (isNaN(endDate.getTime())) {
+                return new EOIResponse(false, `end_date_time must be a valid date time string. end_date_time = ${endDateText}`);
+            }
+
+            if (endDate.getTime() < EOIValidator.MIN_SEARCH_DATE.getTime()) {
+                return new EOIResponse(false, `end_date_time must be on or after ${EOIValidator.MIN_SEARCH_DATE_ISO}. end_date_time = ${endDateText}`);
+            }
+        }
+
+        if (startDate != null && endDate != null && startDate.getTime() >= endDate.getTime()) {
+            return new EOIResponse(false, `start_date_time must be before end_date_time. start_date_time = ${startDateText}; end_date_time = ${endDateText}`);
+        }
+
+        return EOIResponse.success();
     }
 
     public static validateLiveSearchInputs(inputs: EOILiveSearchInputs): EOIResponse {

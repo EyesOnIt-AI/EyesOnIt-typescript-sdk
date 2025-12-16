@@ -14,11 +14,20 @@ https://developer.eyesonit.us/documentation
 
 ### Installation ###
 
-The typescript SDK can be installed with NPM
+The TypeScript SDK can be installed from this repository by running:
 
 ```
+npm install
+npm run build
+```
+
+If you need a distributable tarball (for example to publish or to use with a file: dependency), run:
 
 ```
+npm pack
+```
+
+This will create `eyesonit-typescript-sdk-4.0.0.tgz` in the project root.
 
 ### Usage ###
 

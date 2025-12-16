@@ -12,6 +12,7 @@ export class EOIVideoDetection extends EOIDetection {
     public frame_num: number;
     public object_description: string;
     public condition?: EOIDetectionCondition;
+    public result_id?: string;
 
     constructor() {
         super();
@@ -26,6 +27,7 @@ export class EOIVideoDetection extends EOIDetection {
 
             detection.stream_url = obj.stream_url;
             detection.time = obj.time;
+            detection.result_id = obj.result_id;
             detection.condition = EOIDetectionCondition.fromJsonObj(obj.condition);
         }
 
