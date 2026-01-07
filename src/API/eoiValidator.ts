@@ -20,8 +20,10 @@ import { EOILine } from "./elements/eoiLine";
 import { EOIDetectionCondition } from "./elements/eoiDetectionCondition";
 import { EOISearchInputs } from "./inputs/eoiSearchInputs";
 import { EOILiveSearchInputs } from "./inputs/eoiLiveSearchInputs";
-import { EOICancelLiveSearchInputs } from "./inputs/eoiCancelLiveSearchInputs";
+import { EOIUpdateLiveSearchInputs } from "./inputs/eoiUpdateLiveSearchInputs";
 import { EOISimilaritySearchInputs } from "./inputs/eoiSimilaritySearchInputs";
+import { EOIAddFacerecGroupInputs } from "./inputs/eoiAddFacerecGroupInputs";
+import { EOIAddFacerecPersonInputs } from "./inputs/eoiAddFacerecPersonInputs";
 
 export class EOIValidator {
     private static MAX_PHONE_NUMBER_LENGTH = 20;
@@ -34,7 +36,7 @@ export class EOIValidator {
     private static MIN_LINE_NAME_LENGTH = 3;
     private static MIN_MOTION_THRESHOLD = 10;
     private static MIN_SEARCH_TEXT_LENGTH = 2;
-    private static VALID_CLASS_NAMES = ["person", "vehicle", "bag", "animal", "unknown"];
+    private static VALID_CLASS_NAMES = ["person", "face", "vehicle", "bag", "animal", "unknown"];
     private static MIN_OBJECT_SIZE = 100;
     private static MIN_ALERT_SECONDS = 0.1;
     private static MIN_RESET_SECONDS = 0.1;
@@ -43,6 +45,11 @@ export class EOIValidator {
     private static LINE_CROSS_CONDITION_TYPES = ["line_cross"];
     private static MIN_SEARCH_DATE_ISO = "2020-01-01T00:00:00Z";
     private static MIN_SEARCH_DATE = new Date(EOIValidator.MIN_SEARCH_DATE_ISO);
+    private static MIN_FACEREC_GROUP_NAME_LENGTH = 2;
+    private static MIN_FACEREC_PERSON_NAME_LENGTH = 2;
+    private static MIN_FACEREC_GROUP_ID_LENGTH = 2;
+    private static MIN_FACEREC_PERSON_ID_LENGTH = 2;
+    private static MIN_FACEREC_GROUP_DESCRIPTION_LENGTH = 10;
 
     private static validateBaseInputs(inputs: EOIBaseInputs, lines: EOILine[] | undefined, validateForVideo: boolean): EOIResponse {
         let response: EOIResponse = inputs == null ?
@@ -302,7 +309,7 @@ export class EOIValidator {
         return response;
     }
 
-    public static validateCancelLiveSearchInputs(inputs: EOICancelLiveSearchInputs): EOIResponse {
+    public static validateUpdateLiveSearchInputs(inputs: EOIUpdateLiveSearchInputs): EOIResponse {
         let response: EOIResponse = inputs == null ?
             new EOIResponse(false, "inputs = null. Request must include inputs")
             : EOIResponse.success();
@@ -623,5 +630,139 @@ export class EOIValidator {
         return durationSeconds == null || durationSeconds >= 0 ?
             EOIResponse.success()
             : new EOIResponse(false, `stream monitor duration must be greater than 0. Value is ${durationSeconds}`);
+    }
+
+    public static validateFacerecGroupNameSearch(search: string): EOIResponse {
+        const trimmedSearch = search == null ? null : search.trim();
+
+        return trimmedSearch != null && trimmedSearch.length > 0 ?
+            EOIResponse.success()
+            : new EOIResponse(false, `The group name search string '${trimmedSearch}' must be at least 1 character`);
+    }
+
+    public static validateFacerecPeopleNameSearch(search: string): EOIResponse {
+        const trimmedSearch = search == null ? null : search.trim();
+
+        return trimmedSearch != null && trimmedSearch.length > 0 ?
+            EOIResponse.success()
+            : new EOIResponse(false, `The person name search string '${trimmedSearch}' must be at least 1 character`);
+    }
+
+    public static validateRemoveFacerecGroupInputs(group_id: string): EOIResponse {
+        const trimmedGroupId = group_id == null ? null : group_id.trim();
+
+        return trimmedGroupId != null && trimmedGroupId.length > 0 ?
+            EOIResponse.success()
+            : new EOIResponse(false, `The group ID '${trimmedGroupId}' must be at least ${EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH} character${EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH > 1 ? "s" : ""}`);
+    }
+
+    public static validateNewFacerecGroup(inputs: EOIAddFacerecGroupInputs): EOIResponse {
+        let response: EOIResponse = inputs == null ?
+            new EOIResponse(false, `inputs must be provided`)
+            : EOIResponse.success();
+
+        if (response.success) {
+            const trimmedGroupId = inputs.group_id == null ? null : inputs.group_id.trim();
+
+            if (trimmedGroupId == null || trimmedGroupId.length < EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH) {
+                response = new EOIResponse(false, `The group ID '${trimmedGroupId}' must be at least ${EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH} character${EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH > 1 ? "s" : ""}`);
+            }
+        }
+
+        if (response.success) {
+            const trimmedGroupName = inputs.group_name == null ? null : inputs.group_name.trim();
+
+            if (trimmedGroupName == null || trimmedGroupName.length < EOIValidator.MIN_FACEREC_GROUP_NAME_LENGTH) {
+                response = new EOIResponse(false, `The group name '${trimmedGroupName}' must be at least ${EOIValidator.MIN_FACEREC_GROUP_NAME_LENGTH} character${EOIValidator.MIN_FACEREC_GROUP_NAME_LENGTH > 1 ? "s" : ""}`);
+            }
+        }
+
+        if (response.success) {
+            const trimmedGroupDesc = inputs.group_description == null ? null : inputs.group_description.trim();
+
+            if (trimmedGroupDesc == null || trimmedGroupDesc.length < EOIValidator.MIN_FACEREC_GROUP_DESCRIPTION_LENGTH) {
+                response = new EOIResponse(false, `The group description '${trimmedGroupDesc}' must be at least ${EOIValidator.MIN_FACEREC_GROUP_DESCRIPTION_LENGTH} character${EOIValidator.MIN_FACEREC_GROUP_DESCRIPTION_LENGTH > 1 ? "s" : ""}`);
+            }
+        }
+
+        return response;
+    }
+
+    public static validateNewFacerecPerson(inputs: EOIAddFacerecPersonInputs): EOIResponse {
+        let response: EOIResponse = inputs == null ?
+            new EOIResponse(false, `inputs must be provided`)
+            : EOIResponse.success();
+
+        if (response.success) {
+            const trimmedPersonId = inputs.person_id == null ? null : inputs.person_id.trim();
+
+            if (trimmedPersonId == null || trimmedPersonId.length < EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH) {
+                response = new EOIResponse(false, `The person id '${trimmedPersonId}' must be at least ${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH} character${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH > 1 ? "s" : ""}`);
+            }
+        }
+
+        if (response.success) {
+            const trimmedPersonName = inputs.person_display_name == null ? null : inputs.person_display_name.trim();
+
+            if (trimmedPersonName == null || trimmedPersonName.length < EOIValidator.MIN_FACEREC_PERSON_NAME_LENGTH) {
+                response = new EOIResponse(false, `The person name '${trimmedPersonName}' must be at least ${EOIValidator.MIN_FACEREC_PERSON_NAME_LENGTH} character${EOIValidator.MIN_FACEREC_PERSON_NAME_LENGTH > 1 ? "s" : ""}`);
+            }
+        }
+
+        if (response.success) {
+            if (inputs.person_groups != null && inputs.person_groups.length > 0) {
+                for (const group_id of inputs.person_groups) {
+                    if (response.success) {
+                        const trimmedGroupId = group_id.trim();
+
+                        if (trimmedGroupId == null || trimmedGroupId.length < EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH) {
+                            response = new EOIResponse(false, `The group ID '${trimmedGroupId}' must be at least ${EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH} character${EOIValidator.MIN_FACEREC_GROUP_ID_LENGTH > 1 ? "s" : ""}`);
+                        }
+                    }
+                }
+            }
+        }
+
+        if (response.success) {
+            var image_count: number = 0;
+
+            if (inputs.person_images != null && inputs.person_images.length > 0) {
+                for (const person_image of inputs.person_images) {
+                    if (response.success) {
+                        if (person_image.image && person_image.image.length < 20) {
+                            response = new EOIResponse(false, `Please provide a valid base64 image string`);
+                        }
+                        else if (person_image.file_path && person_image.file_path.length < 5) {
+                            response = new EOIResponse(false, `Please provide a valid file path`);
+                        }
+                        else {
+                            image_count++;
+                        }
+                    }
+                }
+            }
+
+            if (image_count == 0) {
+                response = new EOIResponse(false, `Please provide at least one image as base64 or as a file path`);
+            }
+        }
+
+        return response;
+    }
+
+    public static validateRemoveFacerecPersonInputs(person_id: string): EOIResponse {
+        const trimmedPersonId = person_id == null ? null : person_id.trim();
+
+        return trimmedPersonId != null && trimmedPersonId.length > 0 ?
+            EOIResponse.success()
+            : new EOIResponse(false, `The person ID '${trimmedPersonId}' must be at least ${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH} character${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH > 1 ? "s" : ""}`);
+    }
+
+    public static validateFacerecPersonDetailsInputs(person_id: string): EOIResponse {
+        const trimmedPersonId = person_id == null ? null : person_id.trim();
+
+        return trimmedPersonId != null && trimmedPersonId.length > 0 ?
+            EOIResponse.success()
+            : new EOIResponse(false, `The person ID '${trimmedPersonId}' must be at least ${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH} character${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH > 1 ? "s" : ""}`);
     }
 }

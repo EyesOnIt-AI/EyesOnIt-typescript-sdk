@@ -1,5 +1,6 @@
 import { EOIDetectionCondition } from "./eoiDetectionCondition";
 import { EOIDetectionObject } from "./eoiDetectionObject";
+import { EOIFaceRecognitionConfig } from "./eoiFaceRecognitionConfig";
 import { EOIObjectDescription } from "./eoiObjectDescription";
 
 export class EOIDetectionConfig {
@@ -13,6 +14,7 @@ export class EOIDetectionConfig {
     public alert_seconds?: number = 0.1
     public reset_seconds?: number = 0.1;
     public objects?: EOIDetectionObject[];
+    public face_recognition: EOIFaceRecognitionConfig;
 
     constructor(init?: Partial<EOIDetectionConfig>) { 
     }
@@ -32,6 +34,7 @@ export class EOIDetectionConfig {
             detection_config.alert_seconds = obj.alert_seconds,
             detection_config.reset_seconds = obj.reset_seconds;
             detection_config.objects = obj.objects?.map(EOIDetectionObject.fromJsonObj);
+            detection_config.face_recognition = EOIFaceRecognitionConfig.fromJsonObj(obj.face_recognition);
         }
         else {
             detection_config = EOIDetectionConfig.default();

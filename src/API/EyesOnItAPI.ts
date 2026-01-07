@@ -4,7 +4,7 @@ import { JSONUtil } from '../utils/JSONUtil';
 import { Logger } from '../utils/logger';
 import { EOIResponse } from "./eoiResponse";
 import { EOIAddStreamInputs } from './inputs/eoiAddStreamInputs';
-import { EOICancelLiveSearchInputs } from './inputs/eoiCancelLiveSearchInputs';
+import { EOIUpdateLiveSearchInputs } from './inputs/eoiUpdateLiveSearchInputs';
 import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
 import { EOIMonitorStreamInputs } from './inputs/eoiMonitorStreamInputs';
 import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
@@ -27,6 +27,13 @@ import { EOIStopMonitoringStreamResponse } from './outputs/eoiStopMonitoringStre
 import { EOIUpdateConfigResponse } from './outputs/eoiUpdateConfigResponse';
 import { EOIAxiosRESTHandler } from './REST/EOIAxiosRESTHandler';
 import { IEOIRESTHandler } from './REST/IEOIRESTHandler';
+import { EOIGetFacerecGroupsResponse } from './outputs/eoiGetFacerecGroupsResponse';
+import { EOISearchFacerecNamesResponse } from './outputs/eoiSearchFacerecNamesResponse';
+import { EOIBaseOutputs } from './outputs/eoiBaseOutputs';
+import { EOIAddFacerecGroupInputs } from './inputs/eoiAddFacerecGroupInputs';
+import { EOIRemoveFacerecGroupResponse } from './outputs/eoiRemoveFacerecGroupResponse';
+import { EOIAddFacerecPersonInputs } from './inputs/eoiAddFacerecPersonInputs';
+import { EOIFacerecPersonDetailsResponse } from './outputs/eoiFacerecPersonDetailsResponse';
 
 export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
@@ -42,9 +49,20 @@ export class EyesOnItAPI {
     private static readonly searchPath = "/search";
     private static readonly similaritySearchPath = "/similarity_search";
     private static readonly liveSearchPath = "/live_search";
+    private static readonly pauseLiveSearchPath = "/pause_live_search";
+    private static readonly resumeLiveSearchPath = "/resume_live_search";
     private static readonly cancelLiveSearchPath = "/cancel_live_search";
     private static readonly updateConfigPath = "/update_config";
-
+    private static readonly facerecGroupsPath = "/facerec_groups";
+    private static readonly facerecSearchGroupNamesPath = "/facerec_search_group_names";
+    private static readonly facerecSearchPeopleNamesPath = "/facerec_search_people_names";
+    private static readonly facerecAddGroupPath = "/facerec_add_group";
+    private static readonly facerecRemoveGroupPath = "/facerec_remove_group";
+    private static readonly facerecAddPersonPath = "/facerec_add_person";
+    private static readonly facerecAddPeoplePath = "/facerec_add_people";
+    private static readonly facerecRemovePersonPath = "/facerec_remove_person";
+    private static readonly facerecPersonDetails = "/facerec_person_details";
+    
     private logger;
 
     constructor(private apiBasePath: string, private restHandler?: IEOIRESTHandler, customLogger?: any) {
@@ -388,9 +406,53 @@ export class EyesOnItAPI {
         return liveSearchResponse;
     }
 
-    public async cancelLiveSearch(inputs: EOICancelLiveSearchInputs): Promise<EOIResponse> {
+    public async pauseLiveSearch(inputs: EOIUpdateLiveSearchInputs): Promise<EOIResponse> {
+        let logPrefix = `${this.constructor.name}.pauseLiveSearch`;
+        let updateLiveSearchResponse: EOIResponse = EOIValidator.validateUpdateLiveSearchInputs(inputs);
+
+        if (updateLiveSearchResponse.success) {
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.pauseLiveSearchPath}`;
+
+            const body: any = inputs;
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                updateLiveSearchResponse = response;
+            } catch (error) {
+                updateLiveSearchResponse = this.handleError(error);
+            }
+        }
+
+        return updateLiveSearchResponse;
+    }
+
+    public async resumeLiveSearch(inputs: EOIUpdateLiveSearchInputs): Promise<EOIResponse> {
+        let logPrefix = `${this.constructor.name}.resumeLiveSearch`;
+        let updateLiveSearchResponse: EOIResponse = EOIValidator.validateUpdateLiveSearchInputs(inputs);
+
+        if (updateLiveSearchResponse.success) {
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.resumeLiveSearchPath}`;
+
+            const body: any = inputs;
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                updateLiveSearchResponse = response;
+            } catch (error) {
+                updateLiveSearchResponse = this.handleError(error);
+            }
+        }
+
+        return updateLiveSearchResponse;
+    }
+
+    public async cancelLiveSearch(inputs: EOIUpdateLiveSearchInputs): Promise<EOIResponse> {
         let logPrefix = `${this.constructor.name}.cancelLiveSearch`;
-        let cancelLiveSearchResponse: EOIResponse = EOIValidator.validateCancelLiveSearchInputs(inputs);
+        let cancelLiveSearchResponse: EOIResponse = EOIValidator.validateUpdateLiveSearchInputs(inputs);
 
         if (cancelLiveSearchResponse.success) {
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.cancelLiveSearchPath}`;
@@ -430,6 +492,171 @@ export class EyesOnItAPI {
         }
 
         return updateConfigResponse;
+    }
+
+    public async getFacerecGroups(): Promise<EOIGetFacerecGroupsResponse> {
+        const logPrefix = `${this.constructor.name}.getFacerecGroups`;
+
+        let eoiGetFacerecGroupsResponse: EOIGetFacerecGroupsResponse;
+
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecGroupsPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response: ${JSON.stringify(eoiResponse)}`);
+
+        eoiGetFacerecGroupsResponse = new EOIGetFacerecGroupsResponse(eoiResponse);
+
+        return eoiGetFacerecGroupsResponse;
+    }
+
+    public async addFacerecGroup(inputs: EOIAddFacerecGroupInputs): Promise<EOIBaseOutputs> {
+        let addFacerecGroupResponse = new EOIBaseOutputs(EOIValidator.validateNewFacerecGroup(inputs));
+
+        if (addFacerecGroupResponse.success) {
+            const logPrefix = `${this.constructor.name}.addFacerecGroup`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecAddGroupPath}`;
+
+            const body: any = inputs;
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                addFacerecGroupResponse = new EOIBaseOutputs(response);
+            } catch (error) {
+                addFacerecGroupResponse = new EOIBaseOutputs(this.handleError(error));
+            }
+        }
+
+        return addFacerecGroupResponse;
+    }
+
+    public async removeFacerecGroup(group_id: string): Promise<EOIRemoveFacerecGroupResponse> {
+        let removeFacerecGroupResponse = new EOIRemoveFacerecGroupResponse(EOIValidator.validateRemoveFacerecGroupInputs(group_id));
+
+        if (removeFacerecGroupResponse.success) {
+            const logPrefix = `${this.constructor.name}.removeFacerecGroup`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecRemoveGroupPath}`;
+
+            const body: any = { group_id: group_id };
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                removeFacerecGroupResponse = new EOIRemoveFacerecGroupResponse(response);
+            } catch (error) {
+                removeFacerecGroupResponse = new EOIRemoveFacerecGroupResponse(this.handleError(error));
+            }
+        }
+
+        return removeFacerecGroupResponse;
+    }
+
+    public async addFacerecPerson(inputs: EOIAddFacerecPersonInputs): Promise<EOIBaseOutputs> {
+        let addFacerecPersonResponse = new EOIBaseOutputs(EOIValidator.validateNewFacerecPerson(inputs));
+
+        if (addFacerecPersonResponse.success) {
+            const logPrefix = `${this.constructor.name}.addFacerecPerson`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecAddPersonPath}`;
+
+            const body: any = inputs;
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                addFacerecPersonResponse = new EOIBaseOutputs(response);
+            } catch (error) {
+                addFacerecPersonResponse = new EOIBaseOutputs(this.handleError(error));
+            }
+        }
+
+        return addFacerecPersonResponse;
+    }
+
+    public async removeFacerecPerson(person_id: string): Promise<EOIBaseOutputs> {
+        let removeFacerecPersonResponse = new EOIBaseOutputs(EOIValidator.validateRemoveFacerecPersonInputs(person_id));
+
+        if (removeFacerecPersonResponse.success) {
+            const logPrefix = `${this.constructor.name}.removeFacerecPerson`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecRemovePersonPath}`;
+
+            const body: any = { person_id: person_id };
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                removeFacerecPersonResponse = new EOIBaseOutputs(response);
+            } catch (error) {
+                removeFacerecPersonResponse = new EOIBaseOutputs(this.handleError(error));
+            }
+        }
+
+        return removeFacerecPersonResponse;
+    }
+
+    public async searchFacerecGroupNames(search: string): Promise<EOISearchFacerecNamesResponse> {
+        let searchFacerecGroupNameResponse = new EOISearchFacerecNamesResponse(EOIValidator.validateFacerecGroupNameSearch(search));
+
+        if (searchFacerecGroupNameResponse.success) {
+            const logPrefix = `${this.constructor.name}.searchFacerecGroupNames`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecSearchGroupNamesPath}`;
+
+            const body: any = { search_text: search };
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                searchFacerecGroupNameResponse = new EOISearchFacerecNamesResponse(response);
+            } catch (error) {
+                searchFacerecGroupNameResponse = new EOISearchFacerecNamesResponse(this.handleError(error));
+            }
+        }
+
+        return searchFacerecGroupNameResponse;
+    }
+
+    public async searchFacerecPeopleNames(search: string): Promise<EOISearchFacerecNamesResponse> {
+        let searchFacerecPeopleNameResponse = new EOISearchFacerecNamesResponse(EOIValidator.validateFacerecPeopleNameSearch(search));
+
+        if (searchFacerecPeopleNameResponse.success) {
+            const logPrefix = `${this.constructor.name}.searchFacerecPeopleNames`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecSearchPeopleNamesPath}`;
+
+            const body: any = { search_text: search };
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                searchFacerecPeopleNameResponse = new EOISearchFacerecNamesResponse(response);
+            } catch (error) {
+                searchFacerecPeopleNameResponse = new EOISearchFacerecNamesResponse(this.handleError(error));
+            }
+        }
+
+        return searchFacerecPeopleNameResponse;
+    }
+
+        public async getFacerecPersonDetails(person_id: string): Promise<EOIFacerecPersonDetailsResponse> {
+        let facerecPersonDetailsResponse = new EOIFacerecPersonDetailsResponse(EOIValidator.validateFacerecPersonDetailsInputs(person_id));
+
+        if (facerecPersonDetailsResponse.success) {
+            const logPrefix = `${this.constructor.name}.getFacerecPersonDetails`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecPersonDetails}`;
+
+            const body: any = { person_id: person_id };
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                facerecPersonDetailsResponse = new EOIFacerecPersonDetailsResponse(response);
+            } catch (error) {
+                facerecPersonDetailsResponse = new EOIFacerecPersonDetailsResponse(this.handleError(error));
+            }
+        }
+
+        return facerecPersonDetailsResponse;
     }
 
     private async doGet(endPoint: string): Promise<EOIResponse> {

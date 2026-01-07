@@ -13,6 +13,7 @@ export class EOIVideoDetection extends EOIDetection {
     public object_description: string;
     public condition?: EOIDetectionCondition;
     public result_id?: string;
+    public image: string;
 
     constructor() {
         super();
@@ -26,8 +27,10 @@ export class EOIVideoDetection extends EOIDetection {
             detection.parseSuperClassFields(obj);
 
             detection.stream_url = obj.stream_url;
-            detection.time = obj.time;
+            detection.stream_name = obj.stream_name;
+            detection.time = DateTime.fromISO(obj.time);
             detection.result_id = obj.result_id;
+            detection.image = obj.image;
             detection.condition = EOIDetectionCondition.fromJsonObj(obj.condition);
         }
 
