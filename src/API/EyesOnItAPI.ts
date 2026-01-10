@@ -34,6 +34,7 @@ import { EOIAddFacerecGroupInputs } from './inputs/eoiAddFacerecGroupInputs';
 import { EOIRemoveFacerecGroupResponse } from './outputs/eoiRemoveFacerecGroupResponse';
 import { EOIAddFacerecPersonInputs } from './inputs/eoiAddFacerecPersonInputs';
 import { EOIFacerecPersonDetailsResponse } from './outputs/eoiFacerecPersonDetailsResponse';
+import { EOIAddFacerecPeopleInputs } from './inputs/eoiAddFacerecPeopleInputs';
 
 export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
@@ -573,6 +574,27 @@ export class EyesOnItAPI {
         }
 
         return addFacerecPersonResponse;
+    }
+
+    public async addFacerecPeople(inputs: EOIAddFacerecPeopleInputs): Promise<EOIBaseOutputs> {
+        let addFacerecPeopleResponse = new EOIBaseOutputs(EOIValidator.validateAddFacerecPeople(inputs));
+
+        if (addFacerecPeopleResponse.success) {
+            const logPrefix = `${this.constructor.name}.addFacerecPeople`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.facerecAddPeoplePath}`;
+
+            const body: any = inputs;
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                addFacerecPeopleResponse = new EOIBaseOutputs(response);
+            } catch (error) {
+                addFacerecPeopleResponse = new EOIBaseOutputs(this.handleError(error));
+            }
+        }
+
+        return addFacerecPeopleResponse;
     }
 
     public async removeFacerecPerson(person_id: string): Promise<EOIBaseOutputs> {

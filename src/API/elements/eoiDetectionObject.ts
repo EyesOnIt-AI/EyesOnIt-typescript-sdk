@@ -1,4 +1,5 @@
 import { EOIBoundingBox } from "./eoiBoundingBox";
+import { EOIFaceDetectionObject } from "./eoiFaceDetectionObject";
 import { EOIObjectDescription } from "./eoiObjectDescription";
 
 export class EOIDetectionObject {
@@ -6,9 +7,9 @@ export class EOIDetectionObject {
         public object_descriptions: EOIObjectDescription[], 
         public class_confidence: number, 
         public bounds?: EOIBoundingBox,
-        public image?: string) { }
+        public image?: string,
+        public face?: EOIFaceDetectionObject) { }
         
-
     public static fromJsonObj(obj: any) {
         let object_descriptions: EOIObjectDescription[] = [];
 
@@ -23,7 +24,8 @@ export class EOIDetectionObject {
             object_descriptions,
             obj.class_confidence,
             EOIBoundingBox.fromJsonObj(obj.bounds),
-            obj.image);
+            obj.image,
+            EOIFaceDetectionObject.fromJsonObj(obj.face));
     }
 
     public getConfidenceForDescription(description: string): number | null {

@@ -24,6 +24,7 @@ import { EOIUpdateLiveSearchInputs } from "./inputs/eoiUpdateLiveSearchInputs";
 import { EOISimilaritySearchInputs } from "./inputs/eoiSimilaritySearchInputs";
 import { EOIAddFacerecGroupInputs } from "./inputs/eoiAddFacerecGroupInputs";
 import { EOIAddFacerecPersonInputs } from "./inputs/eoiAddFacerecPersonInputs";
+import { EOIAddFacerecPeopleInputs } from "./inputs/eoiAddFacerecPeopleInputs";
 
 export class EOIValidator {
     private static MAX_PHONE_NUMBER_LENGTH = 20;
@@ -744,6 +745,20 @@ export class EOIValidator {
 
             if (image_count == 0) {
                 response = new EOIResponse(false, `Please provide at least one image as base64 or as a file path`);
+            }
+        }
+
+        return response;
+    }
+
+    public static validateAddFacerecPeople(inputs: EOIAddFacerecPeopleInputs): EOIResponse {
+        let response: EOIResponse = inputs == null ?
+            new EOIResponse(false, `inputs must be provided`)
+            : EOIResponse.success();
+
+        if (response.success) {
+            if (inputs.file_path == null || inputs.file_path.length < 5) {
+                response = new EOIResponse(false, `Please provide a valid file path`);
             }
         }
 
