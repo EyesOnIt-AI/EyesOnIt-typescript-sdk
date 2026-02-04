@@ -129,6 +129,17 @@ export class EOIValidator {
             }
         }
 
+        if (response.success) {
+            const startTimeTrimmed = inputs.video_start_local_time == null ? null : inputs.video_start_local_time.trim();
+
+            if (startTimeTrimmed == null || startTimeTrimmed.length === 0) {
+                response = new EOIResponse(false, `video_start_local_time must be provided. video_start_local_time = ${startTimeTrimmed}`);
+            }
+            else if (isNaN(Date.parse(startTimeTrimmed))) {
+                response = new EOIResponse(false, `video_start_local_time must be a valid time. video_start_local_time = ${startTimeTrimmed}`);
+            }
+        }
+        
         // TODO: fill this in
         if (response.success && inputs.frame_rate < EOIValidator.MIN_FRAME_RATE) {
             response = new EOIResponse(false, `the minimum frame rate is ${EOIValidator.MIN_FRAME_RATE}. frame rate = ${inputs.frame_rate}`);

@@ -5,6 +5,7 @@ import { EOIRegion } from "./eoiRegion";
 
 export class EOIStreamInfo {
     public stream_url: string;
+    public stream_id: string;
     public name: string;
     public frame_rate: number;
     public index_for_search: boolean;
@@ -24,6 +25,7 @@ export class EOIStreamInfo {
 
     public initFromJson(obj: any) {
         this.stream_url = obj.stream_url;
+        this.stream_id = obj.stream_id;
         this.name = obj.name;
         this.status = obj.status;
         this.frame_rate = obj.frame_rate;
