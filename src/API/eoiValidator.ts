@@ -214,10 +214,16 @@ export class EOIValidator {
             : EOIResponse.success();
 
         if (response.success) {
-            const trimmedText = inputs.object_description == null ? null : inputs.object_description.trim();
+            const trimmedObjectDescription = inputs.object_description == null ? null : inputs.object_description.trim();
+            const trimmedPersonId = inputs.face_person_id == null ? null : inputs.face_person_id.trim();
+            const trimmedGroupId = inputs.face_group_id == null ? null : inputs.face_group_id.trim();
 
-            if (trimmedText == null || trimmedText.length < EOIValidator.MIN_SEARCH_TEXT_LENGTH) {
-                response = new EOIResponse(false, `Search text must be at least ${EOIValidator.MIN_SEARCH_TEXT_LENGTH} character(s). Search text = ${trimmedText}`);
+            const objDescValid = trimmedObjectDescription != null && trimmedObjectDescription.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
+            const personIdValid = trimmedPersonId != null && trimmedPersonId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
+            const groupIdValid = trimmedGroupId != null && trimmedGroupId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
+
+            if (!objDescValid && !personIdValid && !groupIdValid) {
+                response = new EOIResponse(false, `Search must include an object description, person or group`);
             }
         }
 

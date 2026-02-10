@@ -4,13 +4,15 @@ import { EOIValidator } from "../eoiValidator";
 export class EOISearchInputs {
     constructor(public class_name: string, 
         public object_description: string, 
+        public face_person_id: string, 
+        public face_group_id: string, 
         public start_date_time: string, 
         public end_date_time: string) {
         
     }
 
     public static fromJsonObj(obj: any): EOISearchInputs | null {
-        let inputs = new EOISearchInputs(obj.class_name, obj.object_description, obj.start_date_time, obj.end_date_time);
+        let inputs = new EOISearchInputs(obj.class_name, obj.object_description, obj.face_person_id, obj.face_group_id, obj.start_date_time, obj.end_date_time);
 
         return EOIValidator.validateSearchInputs(inputs).success ? inputs : null;
     }

@@ -10,6 +10,8 @@ export class EOISearchResult {
     public class_name: string;
     public time: string;
     public image: string;
+    public facerec_person_id: string;
+    public facerec_person_display_name: string;
     public result_id: string;
 
     constructor() {
@@ -28,6 +30,8 @@ export class EOISearchResult {
         result.class_name = obj.class_name;
         result.time = obj.time;
         result.image = obj.image;
+        result.facerec_person_id = obj.person_id;
+        result.facerec_person_display_name = obj.facerec_person_display_name;
         result.result_id = obj.result_id;
 
         return result;
