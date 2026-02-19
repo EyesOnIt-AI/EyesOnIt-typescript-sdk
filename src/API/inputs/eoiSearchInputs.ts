@@ -1,23 +1,26 @@
-import { EOIResponse } from "../eoiResponse";
-import { EOIValidator } from "../eoiValidator";
 
 export class EOISearchInputs {
-    constructor(public class_name: string, 
-        public object_description: string, 
-        public face_person_id: string, 
-        public face_group_id: string, 
-        public start_date_time: string, 
-        public end_date_time: string) {
-        
+    public class_name: string;
+    public object_description: string;
+    public seed_id: string | undefined;
+    public image: string | undefined;
+    public face_person_id: string;
+    public face_group_id: string;
+    public alert_threshold: number;
+    public stream_list: string[] | undefined;
+
+    constructor() {
+
     }
 
-    public static fromJsonObj(obj: any): EOISearchInputs | null {
-        let inputs = new EOISearchInputs(obj.class_name, obj.object_description, obj.face_person_id, obj.face_group_id, obj.start_date_time, obj.end_date_time);
-
-        return EOIValidator.validateSearchInputs(inputs).success ? inputs : null;
-    }
-
-    public validate(): EOIResponse {
-        return EOIValidator.validateSearchInputs(this);
+    public setBaseProperties(obj: any) {
+        this.class_name = obj.class_name;
+        this.object_description = obj.object_description;
+        this.seed_id = obj.seed_id;
+        this.image = obj.image;
+        this.face_person_id = obj.face_person_id;
+        this.face_group_id = obj.face_group_id;
+        this.alert_threshold = obj.threshold;
+        this.stream_list = obj.stream_list;
     }
 }

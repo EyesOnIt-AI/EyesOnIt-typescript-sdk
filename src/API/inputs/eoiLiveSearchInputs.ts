@@ -1,19 +1,23 @@
 import { EOINotification } from "../elements/eoiNotification";
 import { EOIResponse } from "../eoiResponse";
 import { EOIValidator } from "../eoiValidator";
+import { EOISearchInputs } from "./eoiSearchInputs";
 
-export class EOILiveSearchInputs {
-    constructor(public class_name: string, 
-        public object_description: string, 
-        public seed_id: string | undefined,
-        public alert_threshold: number, 
-        public duration_seconds: number | undefined, 
-        public notification: EOINotification | undefined) {
-        
+export class EOILiveSearchInputs extends EOISearchInputs {
+    public duration_seconds: number | undefined;
+    public notification: EOINotification | undefined;
+
+    constructor() {
+        super()
     }
 
     public static fromJsonObj(obj: any): EOILiveSearchInputs | null {
-        let inputs = new EOILiveSearchInputs(obj.class_name, obj.object_description, obj.seed_id, obj.threshold, obj.duration_seconds, EOINotification.fromJsonObj(obj.notification));
+        let inputs = new EOILiveSearchInputs();
+
+        inputs.duration_seconds = obj.duration_seconds;
+        inputs.notification = EOINotification.fromJsonObj(obj.notification);
+
+        inputs.setBaseProperties(obj);
 
         return EOIValidator.validateLiveSearchInputs(inputs).success ? inputs : null;
     }

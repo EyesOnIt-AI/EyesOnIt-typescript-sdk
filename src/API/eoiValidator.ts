@@ -18,10 +18,9 @@ import { EOIMotionDetection } from "./elements/eoiMotionDetection";
 import { EOIDetectionConfig } from "./elements/eoiDetectionConfig";
 import { EOILine } from "./elements/eoiLine";
 import { EOIDetectionCondition } from "./elements/eoiDetectionCondition";
-import { EOISearchInputs } from "./inputs/eoiSearchInputs";
+import { EOIArchiveSearchInputs } from "./inputs/eoiArchiveSearchInputs";
 import { EOILiveSearchInputs } from "./inputs/eoiLiveSearchInputs";
 import { EOIUpdateLiveSearchInputs } from "./inputs/eoiUpdateLiveSearchInputs";
-import { EOISimilaritySearchInputs } from "./inputs/eoiSimilaritySearchInputs";
 import { EOIAddFacerecGroupInputs } from "./inputs/eoiAddFacerecGroupInputs";
 import { EOIAddFacerecPersonInputs } from "./inputs/eoiAddFacerecPersonInputs";
 import { EOIAddFacerecPeopleInputs } from "./inputs/eoiAddFacerecPeopleInputs";
@@ -37,6 +36,7 @@ export class EOIValidator {
     private static MIN_LINE_NAME_LENGTH = 3;
     private static MIN_MOTION_THRESHOLD = 10;
     private static MIN_SEARCH_TEXT_LENGTH = 2;
+    private static MIN_SEED_ID_LENGTH = 10;
     private static VALID_CLASS_NAMES = ["person", "face", "vehicle", "bag", "animal", "unknown"];
     private static MIN_OBJECT_SIZE = 100;
     private static MIN_ALERT_SECONDS = 0.1;
@@ -139,7 +139,7 @@ export class EOIValidator {
                 response = new EOIResponse(false, `video_start_local_time must be a valid time. video_start_local_time = ${startTimeTrimmed}`);
             }
         }
-        
+
         // TODO: fill this in
         if (response.success && inputs.frame_rate < EOIValidator.MIN_FRAME_RATE) {
             response = new EOIResponse(false, `the minimum frame rate is ${EOIValidator.MIN_FRAME_RATE}. frame rate = ${inputs.frame_rate}`);
@@ -208,22 +208,23 @@ export class EOIValidator {
         return response;
     }
 
-    public static validateSearchInputs(inputs: EOISearchInputs): EOIResponse {
-        let response: EOIResponse = inputs == null ?
-            new EOIResponse(false, "inputs = null. Search request must include inputs")
-            : EOIResponse.success();
+    public static validateArchiveSearchInputs(inputs: EOIArchiveSearchInputs): EOIResponse {
+        let response: EOIResponse = EOIValidator.validateSearchInputs(inputs);
 
         if (response.success) {
             const trimmedObjectDescription = inputs.object_description == null ? null : inputs.object_description.trim();
             const trimmedPersonId = inputs.face_person_id == null ? null : inputs.face_person_id.trim();
             const trimmedGroupId = inputs.face_group_id == null ? null : inputs.face_group_id.trim();
-
+            const trimmedSeedId = inputs.seed_id == null ? null : inputs.seed_id.trim();
+            
             const objDescValid = trimmedObjectDescription != null && trimmedObjectDescription.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const personIdValid = trimmedPersonId != null && trimmedPersonId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const groupIdValid = trimmedGroupId != null && trimmedGroupId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
+            const seedIdValid = trimmedSeedId != null && trimmedSeedId.length >= EOIValidator.MIN_SEED_ID_LENGTH;
+            const imageValid = inputs.image != null && inputs.image.length >= 100;
 
-            if (!objDescValid && !personIdValid && !groupIdValid) {
-                response = new EOIResponse(false, `Search must include an object description, person or group`);
+            if (!objDescValid && !personIdValid && !groupIdValid && !seedIdValid && !imageValid) {
+                response = new EOIResponse(false, `Search must include one of the following: object description, person, group, seed image id or image`);
             }
         }
 
@@ -234,14 +235,25 @@ export class EOIValidator {
         return response;
     }
 
-    public static validateSimilaritySearchInputs(inputs: EOISimilaritySearchInputs): EOIResponse {
+    public static validateSearchInputs(inputs: EOIArchiveSearchInputs): EOIResponse {
         let response: EOIResponse = inputs == null ?
-            new EOIResponse(false, "inputs = null. Similarity search request must include inputs")
+            new EOIResponse(false, "inputs = null. Search request must include inputs")
             : EOIResponse.success();
 
         if (response.success) {
-            if (!inputs.seed_id) {
-                response = new EOIResponse(false, "Similarity search seed ID is required");
+            const trimmedObjectDescription = inputs.object_description == null ? null : inputs.object_description.trim();
+            const trimmedPersonId = inputs.face_person_id == null ? null : inputs.face_person_id.trim();
+            const trimmedGroupId = inputs.face_group_id == null ? null : inputs.face_group_id.trim();
+            const trimmedSeedId = inputs.seed_id == null ? null : inputs.seed_id.trim();
+            
+            const objDescValid = trimmedObjectDescription != null && trimmedObjectDescription.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
+            const personIdValid = trimmedPersonId != null && trimmedPersonId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
+            const groupIdValid = trimmedGroupId != null && trimmedGroupId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
+            const seedIdValid = trimmedSeedId != null && trimmedSeedId.length >= EOIValidator.MIN_SEED_ID_LENGTH;
+            const imageValid = inputs.image != null && inputs.image.length >= 100;
+
+            if (!objDescValid && !personIdValid && !groupIdValid && !seedIdValid && !imageValid) {
+                response = new EOIResponse(false, `Search must include one of the following: object description, person, group, seed image id or image`);
             }
         }
 
@@ -305,6 +317,18 @@ export class EOIValidator {
 
             if (trimmedText == null || trimmedText.length < EOIValidator.MIN_SEARCH_TEXT_LENGTH) {
                 response = new EOIResponse(false, `Live search text must be at least ${EOIValidator.MIN_SEARCH_TEXT_LENGTH} character(s). Search text = ${trimmedText}`);
+            }
+        }
+
+        if (response.success) {
+            if (inputs.seed_id && inputs.seed_id.length < 10) {
+                response = new EOIResponse(false, "Please provide a valid similarity search seed ID");
+            }
+        }
+
+        if (response.success) {
+            if (inputs.image && inputs.image.length < 20) {
+                response = new EOIResponse(false, `Please provide a valid base64 image string`);
             }
         }
 

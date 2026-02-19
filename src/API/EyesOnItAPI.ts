@@ -5,12 +5,11 @@ import { Logger } from '../utils/logger';
 import { EOIResponse } from "./eoiResponse";
 import { EOIAddStreamInputs } from './inputs/eoiAddStreamInputs';
 import { EOIUpdateLiveSearchInputs } from './inputs/eoiUpdateLiveSearchInputs';
-import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
 import { EOIMonitorStreamInputs } from './inputs/eoiMonitorStreamInputs';
 import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
-import { EOISearchInputs } from './inputs/eoiSearchInputs';
-import { EOISimilaritySearchInputs } from './inputs/eoiSimilaritySearchInputs';
+import { EOIArchiveSearchInputs } from './inputs/eoiArchiveSearchInputs';
+import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
 import { EOIValidator } from './eoiValidator';
 import { EOIAddStreamResponse } from './outputs/eoiAddStreamResponse';
 import { EOIGetAllStreamsInfoResponse } from './outputs/eoiGetAllStreamsInfoResponse';
@@ -47,9 +46,8 @@ export class EyesOnItAPI {
     private static readonly getStreamDetailsPath = "/get_stream_details";
     private static readonly getLastDetectionInfoPath = "/get_last_detection_info";
     private static readonly getVideoFramePath = "/get_video_frame";
-    private static readonly searchPath = "/search";
-    private static readonly similaritySearchPath = "/similarity_search";
-    private static readonly liveSearchPath = "/live_search";
+    private static readonly searchLivePath = "/live_search";
+    private static readonly searchArchivePath = "/archive_search";
     private static readonly pauseLiveSearchPath = "/pause_live_search";
     private static readonly resumeLiveSearchPath = "/resume_live_search";
     private static readonly cancelLiveSearchPath = "/cancel_live_search";
@@ -341,12 +339,12 @@ export class EyesOnItAPI {
         return getVideoFrameResponse;
     }
 
-    public async search(inputs: EOISearchInputs): Promise<EOISearchResponse> {
+    public async searchArchive(inputs: EOIArchiveSearchInputs): Promise<EOISearchResponse> {
         let logPrefix = `${this.constructor.name}.search`;
-        let searchResponse: EOISearchResponse = new EOISearchResponse(EOIValidator.validateSearchInputs(inputs));
+        let searchResponse: EOISearchResponse = new EOISearchResponse(EOIValidator.validateArchiveSearchInputs(inputs));
 
         if (searchResponse.success) {
-            let endPoint = `${this.apiBasePath}${EyesOnItAPI.searchPath}`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.searchArchivePath}`;
 
             const body: any = inputs;
 
@@ -363,34 +361,12 @@ export class EyesOnItAPI {
         return searchResponse;
     }
 
-    public async similaritySearch(inputs: EOISimilaritySearchInputs): Promise<EOISearchResponse> {
-        let logPrefix = `${this.constructor.name}.similaritySearch`;
-        let searchResponse: EOISearchResponse = new EOISearchResponse(EOIValidator.validateSimilaritySearchInputs(inputs));
-
-        if (searchResponse.success) {
-            let endPoint = `${this.apiBasePath}${EyesOnItAPI.similaritySearchPath}`;
-
-            const body: any = inputs;
-
-            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
-
-            try {
-                const response = await this.doPost(endPoint, body, logPrefix);
-                searchResponse = new EOISearchResponse(response);
-            } catch (error) {
-                searchResponse = new EOISearchResponse(this.handleError(error));
-            }
-        }
-
-        return searchResponse;
-    }
-
-    public async liveSearch(inputs: EOILiveSearchInputs): Promise<EOILiveSearchResponse> {
+    public async searchLive(inputs: EOILiveSearchInputs): Promise<EOILiveSearchResponse> {
         let logPrefix = `${this.constructor.name}.liveSearch`;
         let liveSearchResponse: EOILiveSearchResponse = new EOILiveSearchResponse(EOIValidator.validateLiveSearchInputs(inputs));
 
         if (liveSearchResponse.success) {
-            let endPoint = `${this.apiBasePath}${EyesOnItAPI.liveSearchPath}`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.searchLivePath}`;
 
             const body: any = inputs;
 
