@@ -1,6 +1,7 @@
 
 export class EOISearchInputs {
     public class_name: string;
+    public search_type: string | null = null;            // class_name, natural_language, face_recognition, similarity
     public object_description: string;
     public seed_id: string | undefined;
     public image: string | undefined;
@@ -15,6 +16,7 @@ export class EOISearchInputs {
 
     public setBaseProperties(obj: any) {
         this.class_name = obj.class_name;
+        this.search_type = obj.search_type;
         this.object_description = obj.object_description;
         this.seed_id = obj.seed_id;
         this.image = obj.image;

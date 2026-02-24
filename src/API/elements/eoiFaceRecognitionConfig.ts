@@ -14,9 +14,6 @@ export class EOIFaceRecognitionConfig {
             face_recognition_config.person = obj.person;
             face_recognition_config.group = obj.group;
         }
-        else {
-            face_recognition_config = EOIFaceRecognitionConfig.default();
-        }
 
         return face_recognition_config;
     }
