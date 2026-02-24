@@ -35,6 +35,22 @@ This will create `eyesonit-typescript-sdk-4.0.0.tgz` in the project root.
 
 ```
 
+### API Documentation ###
+
+Generate markdown API reference docs from TypeScript comments:
+
+```
+npm run docs:api
+```
+
+Generated output:
+
+```
+generated/docs/sdk-api
+```
+
+See [docs/DOCUMENTATION_WORKFLOW.md](docs/DOCUMENTATION_WORKFLOW.md) for the recommended process to keep docs updated and publish them in Docusaurus.
+
 ### Questions? ###
 
 email us at support@eyesonit.us

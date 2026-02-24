@@ -1,0 +1,26 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/API/EyesOnItAPI.ts",
+    "src/API/eoiResponse.ts",
+    "src/API/REST/IEOIRESTHandler.ts",
+    "src/API/elements",
+    "src/API/inputs",
+    "src/API/outputs"
+  ],
+  "entryPointStrategy": "expand",
+  "plugin": [
+    "typedoc-plugin-markdown"
+  ],
+  "readme": "none",
+  "out": "generated/docs/sdk-api",
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "excludeNotDocumented": false,
+  "disableSources": true,
+  "sort": [
+    "source-order"
+  ]
+}

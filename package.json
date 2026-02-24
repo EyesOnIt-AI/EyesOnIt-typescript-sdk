@@ -5,7 +5,10 @@
   "main": "dist/API/EyesOnItAPI.js",
   "types": "dist/API/EyesOnItAPI.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "docs:api:clean": "node -e \"const fs=require('fs'); fs.rmSync('generated/docs/sdk-api',{ recursive: true, force: true });\"",
+    "docs:api:generate": "typedoc --options typedoc.json",
+    "docs:api": "npm run docs:api:clean && npm run docs:api:generate"
   },
   "files": [
     "dist",
@@ -25,6 +28,8 @@
   "devDependencies": {
     "@types/luxon": "^3.6.2",
     "@types/node": "^22.15.29",
+    "typedoc": "^0.28.14",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typescript": "^5.8.3"
   },
   "dependencies": {

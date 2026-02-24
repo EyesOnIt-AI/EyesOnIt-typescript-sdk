@@ -4,21 +4,68 @@ import { EOIFaceRecognitionConfig } from "./eoiFaceRecognitionConfig";
 import { EOIObjectDescription } from "./eoiObjectDescription";
 import { EOISimilarityConfig } from "./eoiSimilarityConfig";
 
+/**
+ * Detection behavior for a region.
+ * Configure class-based, natural-language, face-recognition, or similarity matching.
+ */
 export class EOIDetectionConfig {
+    /**
+     * Optional class filter (`person`, `vehicle`, `bag`, `animal`, `unknown`).
+     */
     public class_name?: string | null;
+    /**
+     * Class confidence threshold used when `class_name` is set.
+     */
     public class_threshold?: number | null = 10;
+    /**
+     * Minimum object size filter. Validator minimum is `100` when provided.
+     */
     public object_size?: number = 100;
+    /**
+     * Optional contour-area filter for motion/object extraction.
+     */
     public min_contour_area?: number | null = null;
+    /**
+     * Optional upper bound for bounding-box area.
+     */
     public max_bounding_box_area?: number | null = null;
+    /**
+     * Detection mode.
+     * Supported values: `class_name`, `natural_language`, `face_recognition`, `similarity`.
+     */
     public detection_type: string | null = null;            // class_name, natural_language, face_recognition, similarity
+    /**
+     * Natural-language/object prompt list used for matching and alerting.
+     */
     public object_descriptions: EOIObjectDescription[];
+    /**
+     * Face-recognition matching configuration.
+     */
     public face_recognition: EOIFaceRecognitionConfig | undefined = undefined;
+    /**
+     * Similarity matching configuration.
+     */
     public similarity: EOISimilarityConfig | undefined = undefined;
+    /**
+     * Optional detection conditions such as count and line-cross.
+     */
     public conditions?: EOIDetectionCondition[];
+    /**
+     * Seconds detection must persist before alerting. Validator minimum: `0.1`.
+     */
     public alert_seconds?: number = 0.1
+    /**
+     * Seconds before resetting alert state. Validator minimum: `0.1`.
+     */
     public reset_seconds?: number = 0.1;
+    /**
+     * Optional object-level filters/labels for downstream matching logic.
+     */
     public objects?: EOIDetectionObject[];
 
+    /**
+     * @param init Optional partial initialization object.
+     */
     constructor(init?: Partial<EOIDetectionConfig>) { 
     }
 

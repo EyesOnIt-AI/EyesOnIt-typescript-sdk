@@ -37,7 +37,7 @@ export class EOIValidator {
     private static MIN_MOTION_THRESHOLD = 10;
     private static MIN_SEARCH_TEXT_LENGTH = 2;
     private static MIN_SEED_ID_LENGTH = 10;
-    private static VALID_CLASS_NAMES = ["person", "face", "vehicle", "bag", "animal", "unknown"];
+    private static VALID_CLASS_NAMES = ["person", "vehicle", "bag", "animal", "unknown"];
     private static MIN_OBJECT_SIZE = 100;
     private static MIN_ALERT_SECONDS = 0.1;
     private static MIN_RESET_SECONDS = 0.1;

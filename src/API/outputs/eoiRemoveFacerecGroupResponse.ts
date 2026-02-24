@@ -2,10 +2,22 @@ import { EOIResponse } from "../eoiResponse";
 import { EOIBaseOutputs } from "./eoiBaseOutputs";
 
 
+/**
+ * Response wrapper for `removeFacerecGroup`.
+ */
 export class EOIRemoveFacerecGroupResponse extends EOIBaseOutputs {
+    /**
+     * Removed group identifier.
+     */
     public group_id: string;
+    /**
+     * Number of person-group memberships removed as part of this operation.
+     */
     public removed_memberships: number;
 
+    /**
+     * @param eoiResponse Raw API response.
+     */
     constructor(eoiResponse: EOIResponse) {
         super(eoiResponse);
 

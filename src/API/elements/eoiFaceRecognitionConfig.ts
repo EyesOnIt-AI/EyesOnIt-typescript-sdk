@@ -1,7 +1,23 @@
+/**
+ * Face recognition matching options used by detection and search configuration.
+ */
 export class EOIFaceRecognitionConfig {
+    /**
+     * Match strategy. Typical values are server-defined (for example person/group matching mode).
+     */
     public match_type: string;
+    /**
+     * Match confidence threshold.
+     * Common range is 0-100; defaults to `100` in `default()`.
+     */
     public match_threshold: number;
+    /**
+     * Optional person identifier for person-specific matching.
+     */
     public person?: string;
+    /**
+     * Optional group identifier for group-level matching.
+     */
     public group?: string | null = null;
 
     public static fromJsonObj(obj: any) {

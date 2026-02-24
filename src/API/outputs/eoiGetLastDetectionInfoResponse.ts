@@ -3,10 +3,22 @@ import { EOIResponse } from "../eoiResponse";
 import { EOIBaseOutputs } from "./eoiBaseOutputs";
 
 
+/**
+ * Response wrapper for `getLastDetectionInfo`.
+ */
 export class EOIGetLastDetectionInfoResponse extends EOIBaseOutputs {
+    /**
+     * Optional base64-encoded image for the last detection frame.
+     */
     public image: string;
+    /**
+     * Parsed detections from the last detection event.
+     */
     public detections: EOIVideoDetection[];
     
+    /**
+     * @param eoiResponse Raw API response.
+     */
     constructor(eoiResponse: EOIResponse) {
         super(eoiResponse);
 

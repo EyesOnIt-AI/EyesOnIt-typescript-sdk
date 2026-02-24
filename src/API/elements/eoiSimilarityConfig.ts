@@ -1,4 +1,10 @@
+/**
+ * Similarity-search configuration used by detection/search requests.
+ */
 export class EOISimilarityConfig {
+    /**
+     * Base64-encoded reference image used for similarity matching.
+     */
     public image: string | undefined;
 
     public static fromJsonObj(obj: any) {

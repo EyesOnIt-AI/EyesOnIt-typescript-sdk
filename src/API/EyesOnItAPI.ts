@@ -35,6 +35,12 @@ import { EOIAddFacerecPersonInputs } from './inputs/eoiAddFacerecPersonInputs';
 import { EOIFacerecPersonDetailsResponse } from './outputs/eoiFacerecPersonDetailsResponse';
 import { EOIAddFacerecPeopleInputs } from './inputs/eoiAddFacerecPeopleInputs';
 
+/**
+ * Client for the EyesOnIt REST API.
+ *
+ * This class wraps the HTTP endpoints exposed by EyesOnIt and returns typed response
+ * objects for each operation.
+ */
 export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
     private static readonly addStreamPath = "/add_stream";
@@ -64,6 +70,13 @@ export class EyesOnItAPI {
     
     private logger;
 
+    /**
+     * Creates an API client instance.
+     *
+     * @param apiBasePath Base URL for the EyesOnIt API, for example `http://localhost:8000`.
+     * @param restHandler Optional custom REST handler. If omitted, Axios is used.
+     * @param customLogger Optional logger implementation. Defaults to an internal logger.
+     */
     constructor(private apiBasePath: string, private restHandler?: IEOIRESTHandler, customLogger?: any) {
         let logPrefix = `${this.constructor.name}.constructor`;
 
@@ -76,50 +89,14 @@ export class EyesOnItAPI {
         this.logger.debug(`${logPrefix}`);
     }
 
-    /*
-    public async processImageFromFile(inputs: EOIProcessImageInputs, filePath: string): Promise<EOIProcessImageResponse> {
-        let logPrefix = `${this.constructor.name}.inferFromFile`;
-        let processImageResponse: EOIProcessImageResponse = new EOIProcessImageResponse(EOIValidation.validateProcessImageInputs(inputs));
 
-        if (processImageResponse.success) {
-            if (filePath == null || filePath.length == 0) {
-                processImageResponse = new EOIProcessImageResponse(new EOIResponse(false, `filePath must not be null or empty. filePath = ${filePath}`));
-            }
-        }
-
-        if (processImageResponse.success) {
-            // try to read the file
-            let base64Image = null;
-
-            try {
-                let fileContent = fs.readFileSync(filePath);
-                base64Image = fileContent.toString('base64');
-            }
-            catch (error: any) {
-                processImageResponse = new EOIProcessImageResponse(new EOIResponse(false, `unable to read file from ${filePath}. Error = ${ExceptionUtil.getErrorMessage(error)}`));
-                base64Image = null;
-            }
-
-            // set up request endpoint and body
-            let endPoint = `${this.apiBasePath}${EyesOnItAPI.processImagePath}`;
-
-            const body: any = inputs;
-            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
-
-            body.file = base64Image;
-
-            try {
-                const response = await this.doPost(endPoint, body, logPrefix);
-                processImageResponse = new EOIProcessImageResponse(response);
-            } catch (error) {
-                processImageResponse = new EOIProcessImageResponse(this.handleError(error));
-            }
-        }
-
-        return processImageResponse;
-    }
-    */
-
+    /**
+     * Processes a single image with the detection configuration defined in the request.
+     *
+     * @param inputs Image and detection configuration payload.
+     * @returns A typed response containing success state, message, and image detections.
+     * @remarks Endpoint: `POST /process_image`
+     */
     public async processImage(inputs: EOIProcessImageInputs): Promise<EOIProcessImageResponse> {
         let logPrefix = `${this.constructor.name}.processImage`;
         let processImageResponse: EOIProcessImageResponse = new EOIProcessImageResponse(EOIValidator.validateProcessImageInputs(inputs));
@@ -150,6 +127,13 @@ export class EyesOnItAPI {
         return processImageResponse;
     }
 
+    /**
+     * Registers a stream for monitoring and detection.
+     *
+     * @param inputs Stream URL and monitoring configuration.
+     * @returns A typed response containing stream registration results.
+     * @remarks Endpoint: `POST /add_stream`
+     */
     public async addStream(inputs: EOIAddStreamInputs): Promise<EOIAddStreamResponse> {
         let logPrefix = `${this.constructor.name}.addStream`;
         let addStreamResponse: EOIAddStreamResponse = new EOIAddStreamResponse(EOIValidator.validateAddStreamInputs(inputs));
@@ -172,6 +156,13 @@ export class EyesOnItAPI {
         return addStreamResponse;
     }
 
+    /**
+     * Submits a video for asynchronous processing with the supplied detection settings.
+     *
+     * @param inputs Video metadata and detection configuration.
+     * @returns A typed response containing processing status details.
+     * @remarks Endpoint: `POST /process_videos`
+     */
     public async processVideo(inputs: EOIProcessVideoInputs): Promise<EOIProcessVideosResponse> {
         let logPrefix = `${this.constructor.name}.processVideo`;
         let processVideosResponse: EOIProcessVideosResponse = new EOIProcessVideosResponse(EOIValidator.validateProcessVideoInputs(inputs));
@@ -194,6 +185,13 @@ export class EyesOnItAPI {
         return processVideosResponse;
     }
 
+    /**
+     * Removes a previously registered stream.
+     *
+     * @param streamUrl RTSP stream URL to remove.
+     * @returns A typed response indicating whether the stream was removed.
+     * @remarks Endpoint: `POST /remove_stream`
+     */
     public async removeStream(streamUrl: string): Promise<EOIRemoveStreamResponse> {
         let removeStreamResponse: EOIRemoveStreamResponse = new EOIRemoveStreamResponse(EOIValidator.validateStreamUrl(streamUrl));
 
@@ -215,6 +213,13 @@ export class EyesOnItAPI {
         return removeStreamResponse;
     }
 
+    /**
+     * Starts monitoring a stream that has already been added.
+     *
+     * @param inputs Stream identifier and optional duration.
+     * @returns A typed response containing monitor start status.
+     * @remarks Endpoint: `POST /monitor_stream`
+     */
     public async monitorStream(inputs: EOIMonitorStreamInputs): Promise<EOIMonitorStreamResponse> {
         let monitorStreamResponse = new EOIMonitorStreamResponse(EOIValidator.validateMonitorStreamInputs(inputs));
 
@@ -241,6 +246,13 @@ export class EyesOnItAPI {
         return monitorStreamResponse;
     }
 
+    /**
+     * Stops active monitoring for a stream.
+     *
+     * @param streamUrl RTSP stream URL to stop monitoring.
+     * @returns A typed response indicating whether monitoring stopped.
+     * @remarks Endpoint: `POST /stop_monitoring`
+     */
     public async stopMonitoringStream(streamUrl: string): Promise<EOIStopMonitoringStreamResponse> {
         let stopMonitorStreamResponse = new EOIStopMonitoringStreamResponse(EOIValidator.validateStreamUrl(streamUrl));
 
@@ -262,6 +274,12 @@ export class EyesOnItAPI {
         return stopMonitorStreamResponse;
     }
 
+    /**
+     * Returns summary information for all registered streams.
+     *
+     * @returns A typed response with stream information records.
+     * @remarks Endpoint: `GET /get_all_streams_info`
+     */
     public async getAllStreamsInfo(): Promise<EOIGetAllStreamsInfoResponse> {
         const logPrefix = `${this.constructor.name}.getAllStreamsInfo`;
 
@@ -280,6 +298,13 @@ export class EyesOnItAPI {
         return eoiGetAllStreamsInfoResponse;
     }
 
+    /**
+     * Returns detailed status and configuration for a single stream.
+     *
+     * @param streamUrl RTSP stream URL to query.
+     * @returns A typed response with detailed stream information.
+     * @remarks Endpoint: `POST /get_stream_details`
+     */
     public async getStreamDetails(streamUrl: string): Promise<EOIGetStreamDetailsResponse> {
         let eoiGetStreamDetailsResponse = new EOIGetStreamDetailsResponse(EOIValidator.validateStreamUrl(streamUrl));
 
@@ -297,6 +322,13 @@ export class EyesOnItAPI {
         return eoiGetStreamDetailsResponse;
     }
 
+    /**
+     * Returns the most recent detection information for a stream.
+     *
+     * @param streamUrl RTSP stream URL to query.
+     * @returns A typed response with the latest detection payload.
+     * @remarks Endpoint: `POST /get_last_detection_info`
+     */
     public async getLastDetectionInfo(streamUrl: string): Promise<EOIGetLastDetectionInfoResponse> {
         let getLastDetectionInfoResponse = new EOIGetLastDetectionInfoResponse(EOIValidator.validateStreamUrl(streamUrl));
 
@@ -318,6 +350,13 @@ export class EyesOnItAPI {
         return getLastDetectionInfoResponse;
     }
 
+    /**
+     * Retrieves the latest frame for a stream.
+     *
+     * @param streamUrl RTSP stream URL to query.
+     * @returns A typed response that includes a frame image payload.
+     * @remarks Endpoint: `POST /get_video_frame`
+     */
     public async getVideoFrame(streamUrl: string): Promise<EOIGetVideoFrameResponse> {
         let getVideoFrameResponse = new EOIGetVideoFrameResponse(EOIValidator.validateStreamUrl(streamUrl));
 
@@ -339,6 +378,13 @@ export class EyesOnItAPI {
         return getVideoFrameResponse;
     }
 
+    /**
+     * Executes a search over archived detections and recordings.
+     *
+     * @param inputs Archive search criteria and filters.
+     * @returns A typed response containing matching results.
+     * @remarks Endpoint: `POST /archive_search`
+     */
     public async searchArchive(inputs: EOIArchiveSearchInputs): Promise<EOISearchResponse> {
         let logPrefix = `${this.constructor.name}.search`;
         let searchResponse: EOISearchResponse = new EOISearchResponse(EOIValidator.validateArchiveSearchInputs(inputs));
@@ -361,6 +407,13 @@ export class EyesOnItAPI {
         return searchResponse;
     }
 
+    /**
+     * Starts a live search task against active streams.
+     *
+     * @param inputs Live search configuration and criteria.
+     * @returns A typed response containing the live search identifier and status.
+     * @remarks Endpoint: `POST /live_search`
+     */
     public async searchLive(inputs: EOILiveSearchInputs): Promise<EOILiveSearchResponse> {
         let logPrefix = `${this.constructor.name}.liveSearch`;
         let liveSearchResponse: EOILiveSearchResponse = new EOILiveSearchResponse(EOIValidator.validateLiveSearchInputs(inputs));
@@ -383,6 +436,13 @@ export class EyesOnItAPI {
         return liveSearchResponse;
     }
 
+    /**
+     * Pauses one live search task or all live search tasks.
+     *
+     * @param inputs Search identifier payload. Use `-1` to target all searches.
+     * @returns Base API response indicating pause status.
+     * @remarks Endpoint: `POST /pause_live_search`
+     */
     public async pauseLiveSearch(inputs: EOIUpdateLiveSearchInputs): Promise<EOIResponse> {
         let logPrefix = `${this.constructor.name}.pauseLiveSearch`;
         let updateLiveSearchResponse: EOIResponse = EOIValidator.validateUpdateLiveSearchInputs(inputs);
@@ -405,6 +465,13 @@ export class EyesOnItAPI {
         return updateLiveSearchResponse;
     }
 
+    /**
+     * Resumes one paused live search task or all paused live search tasks.
+     *
+     * @param inputs Search identifier payload. Use `-1` to target all searches.
+     * @returns Base API response indicating resume status.
+     * @remarks Endpoint: `POST /resume_live_search`
+     */
     public async resumeLiveSearch(inputs: EOIUpdateLiveSearchInputs): Promise<EOIResponse> {
         let logPrefix = `${this.constructor.name}.resumeLiveSearch`;
         let updateLiveSearchResponse: EOIResponse = EOIValidator.validateUpdateLiveSearchInputs(inputs);
@@ -427,6 +494,13 @@ export class EyesOnItAPI {
         return updateLiveSearchResponse;
     }
 
+    /**
+     * Cancels one live search task or all live search tasks.
+     *
+     * @param inputs Search identifier payload. Use `-1` to target all searches.
+     * @returns Base API response indicating cancel status.
+     * @remarks Endpoint: `POST /cancel_live_search`
+     */
     public async cancelLiveSearch(inputs: EOIUpdateLiveSearchInputs): Promise<EOIResponse> {
         let logPrefix = `${this.constructor.name}.cancelLiveSearch`;
         let cancelLiveSearchResponse: EOIResponse = EOIValidator.validateUpdateLiveSearchInputs(inputs);
@@ -449,6 +523,13 @@ export class EyesOnItAPI {
         return cancelLiveSearchResponse;
     }
 
+    /**
+     * Updates runtime configuration on the EyesOnIt server.
+     *
+     * @param inputs Arbitrary configuration object accepted by the `/update_config` endpoint.
+     * @returns A typed response containing update status details.
+     * @remarks Endpoint: `POST /update_config`
+     */
     public async updateConfig(inputs: any): Promise<EOIUpdateConfigResponse> {
         let logPrefix = `${this.constructor.name}.updateConfig`;
         let updateConfigResponse: EOIUpdateConfigResponse = new EOIUpdateConfigResponse(EOIResponse.success());
@@ -471,6 +552,12 @@ export class EyesOnItAPI {
         return updateConfigResponse;
     }
 
+    /**
+     * Lists face recognition groups.
+     *
+     * @returns A typed response containing all configured face recognition groups.
+     * @remarks Endpoint: `GET /facerec_groups`
+     */
     public async getFacerecGroups(): Promise<EOIGetFacerecGroupsResponse> {
         const logPrefix = `${this.constructor.name}.getFacerecGroups`;
 
@@ -489,6 +576,13 @@ export class EyesOnItAPI {
         return eoiGetFacerecGroupsResponse;
     }
 
+    /**
+     * Creates a face recognition group.
+     *
+     * @param inputs Group identifier, display name, and description.
+     * @returns Base typed response indicating creation status.
+     * @remarks Endpoint: `POST /facerec_add_group`
+     */
     public async addFacerecGroup(inputs: EOIAddFacerecGroupInputs): Promise<EOIBaseOutputs> {
         let addFacerecGroupResponse = new EOIBaseOutputs(EOIValidator.validateNewFacerecGroup(inputs));
 
@@ -510,6 +604,13 @@ export class EyesOnItAPI {
         return addFacerecGroupResponse;
     }
 
+    /**
+     * Deletes a face recognition group.
+     *
+     * @param group_id Group identifier to remove.
+     * @returns A typed response indicating whether the group was removed.
+     * @remarks Endpoint: `POST /facerec_remove_group`
+     */
     public async removeFacerecGroup(group_id: string): Promise<EOIRemoveFacerecGroupResponse> {
         let removeFacerecGroupResponse = new EOIRemoveFacerecGroupResponse(EOIValidator.validateRemoveFacerecGroupInputs(group_id));
 
@@ -531,6 +632,13 @@ export class EyesOnItAPI {
         return removeFacerecGroupResponse;
     }
 
+    /**
+     * Creates a face recognition person profile and attaches images/groups.
+     *
+     * @param inputs Person identifier, display name, groups, and images.
+     * @returns Base typed response indicating creation status.
+     * @remarks Endpoint: `POST /facerec_add_person`
+     */
     public async addFacerecPerson(inputs: EOIAddFacerecPersonInputs): Promise<EOIBaseOutputs> {
         let addFacerecPersonResponse = new EOIBaseOutputs(EOIValidator.validateNewFacerecPerson(inputs));
 
@@ -552,6 +660,13 @@ export class EyesOnItAPI {
         return addFacerecPersonResponse;
     }
 
+    /**
+     * Bulk imports face recognition people from a file.
+     *
+     * @param inputs File path payload for bulk person import.
+     * @returns Base typed response indicating import status.
+     * @remarks Endpoint: `POST /facerec_add_people`
+     */
     public async addFacerecPeople(inputs: EOIAddFacerecPeopleInputs): Promise<EOIBaseOutputs> {
         let addFacerecPeopleResponse = new EOIBaseOutputs(EOIValidator.validateAddFacerecPeople(inputs));
 
@@ -573,6 +688,13 @@ export class EyesOnItAPI {
         return addFacerecPeopleResponse;
     }
 
+    /**
+     * Deletes a face recognition person profile.
+     *
+     * @param person_id Person identifier to remove.
+     * @returns Base typed response indicating whether the person was removed.
+     * @remarks Endpoint: `POST /facerec_remove_person`
+     */
     public async removeFacerecPerson(person_id: string): Promise<EOIBaseOutputs> {
         let removeFacerecPersonResponse = new EOIBaseOutputs(EOIValidator.validateRemoveFacerecPersonInputs(person_id));
 
@@ -594,6 +716,13 @@ export class EyesOnItAPI {
         return removeFacerecPersonResponse;
     }
 
+    /**
+     * Searches face recognition group names by text.
+     *
+     * @param search Search text used to match group names.
+     * @returns A typed response containing matching group names.
+     * @remarks Endpoint: `POST /facerec_search_group_names`
+     */
     public async searchFacerecGroupNames(search: string): Promise<EOISearchFacerecNamesResponse> {
         let searchFacerecGroupNameResponse = new EOISearchFacerecNamesResponse(EOIValidator.validateFacerecGroupNameSearch(search));
 
@@ -615,6 +744,13 @@ export class EyesOnItAPI {
         return searchFacerecGroupNameResponse;
     }
 
+    /**
+     * Searches face recognition person names by text.
+     *
+     * @param search Search text used to match person names.
+     * @returns A typed response containing matching person names.
+     * @remarks Endpoint: `POST /facerec_search_people_names`
+     */
     public async searchFacerecPeopleNames(search: string): Promise<EOISearchFacerecNamesResponse> {
         let searchFacerecPeopleNameResponse = new EOISearchFacerecNamesResponse(EOIValidator.validateFacerecPeopleNameSearch(search));
 
@@ -636,7 +772,14 @@ export class EyesOnItAPI {
         return searchFacerecPeopleNameResponse;
     }
 
-        public async getFacerecPersonDetails(person_id: string): Promise<EOIFacerecPersonDetailsResponse> {
+    /**
+     * Returns details for one face recognition person profile.
+     *
+     * @param person_id Person identifier to query.
+     * @returns A typed response containing person profile details.
+     * @remarks Endpoint: `POST /facerec_person_details`
+     */
+    public async getFacerecPersonDetails(person_id: string): Promise<EOIFacerecPersonDetailsResponse> {
         let facerecPersonDetailsResponse = new EOIFacerecPersonDetailsResponse(EOIValidator.validateFacerecPersonDetailsInputs(person_id));
 
         if (facerecPersonDetailsResponse.success) {

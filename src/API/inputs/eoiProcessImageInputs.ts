@@ -4,7 +4,16 @@ import { EOIRegion } from "../elements/eoiRegion";
 import { EOIValidator } from "../eoiValidator";
 import { EOIEffects } from "../elements/eoiEffects";
 
+/**
+ * Request payload for processing a single image.
+ */
 export class EOIProcessImageInputs extends EOIBaseInputs {
+    /**
+     * @param base64Image Base64-encoded image payload.
+     * @param regions Detection regions and configuration.
+     * @param return_image Whether to include an annotated image in the response.
+     * @param effects Optional visual effects/overlays configuration.
+     */
     constructor(public base64Image: string | undefined, public regions: EOIRegion[], public return_image?: boolean, public effects?: EOIEffects) {
         super(regions);
     }
@@ -29,6 +38,10 @@ export class EOIProcessImageInputs extends EOIBaseInputs {
         return inputs;
     }
 
+    /**
+     * Serializes this payload for the API request body.
+     * The serializer excludes nested `confidence` values.
+     */
     public stringify(): string {
         return JSON.stringify(this, this.stringifyFilter);
     }
@@ -38,6 +51,9 @@ export class EOIProcessImageInputs extends EOIBaseInputs {
         else return value;
     }
 
+    /**
+     * Validates this payload against SDK-side constraints.
+     */
     public validate(): EOIResponse {
         return EOIValidator.validateProcessImageInputs(this);
     }

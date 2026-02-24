@@ -7,7 +7,22 @@ import { EOIRecording } from "../elements/eoiRecording";
 import { EOIEffects } from "../elements/eoiEffects";
 import { EOILine } from "../elements/eoiLine";
 
+/**
+ * Request payload for registering a stream and its monitoring configuration.
+ */
 export class EOIAddStreamInputs extends EOIBaseInputs {
+    /**
+     * @param stream_url RTSP URL for the stream.
+     * @param name Stream display name. Minimum length: 3.
+     * @param frame_rate Processing frame rate. Default: `5`. Minimum: `1`.
+     * @param index_for_search Whether this stream should be indexed for archive search.
+     * @param search_index_types Search index types to build when indexing is enabled.
+     * @param regions Detection regions and configuration.
+     * @param lines Optional named lines used by line-cross conditions.
+     * @param notification Optional notification settings (for example phone alerting).
+     * @param recording Optional recording settings.
+     * @param effects Optional visual effect overlays for output frames.
+     */
     constructor(
         public stream_url: string, 
         public name: string, 
@@ -37,6 +52,10 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         return EOIValidator.validateAddStreamInputs(inputs).success ? inputs : null;
     }
 
+    /**
+     * Serializes this payload for the API request body.
+     * The serializer excludes nested `confidence` values.
+     */
     public stringify(): string {
         return JSON.stringify(this, this.stringifyFilter);
     }
@@ -46,6 +65,9 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         else return value;
     }
 
+    /**
+     * Validates this payload against SDK-side constraints.
+     */
     public validate(): EOIResponse {
         return EOIValidator.validateAddStreamInputs(this);
     }
