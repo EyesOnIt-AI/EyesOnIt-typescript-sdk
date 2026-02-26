@@ -8,9 +8,9 @@ export class EOIFaceRecognitionConfig {
     public match_type: string;
     /**
      * Match confidence threshold.
-     * Common range is 0-100; defaults to `100` in `default()`.
+     * Common range is 0-100; defaults to `80`.
      */
-    public match_threshold: number;
+    public match_threshold: number = 80;
     /**
      * Optional person identifier for person-specific matching.
      */
@@ -38,7 +38,7 @@ export class EOIFaceRecognitionConfig {
         let face_recognition_config = new EOIFaceRecognitionConfig();
 
         face_recognition_config.match_type = "";
-        face_recognition_config.match_threshold = 100;
+        face_recognition_config.match_threshold = 80;
         face_recognition_config.person = "";
         face_recognition_config.group = "";
 

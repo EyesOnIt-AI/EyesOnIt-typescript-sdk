@@ -24,12 +24,14 @@ import { EOIUpdateLiveSearchInputs } from "./inputs/eoiUpdateLiveSearchInputs";
 import { EOIAddFacerecGroupInputs } from "./inputs/eoiAddFacerecGroupInputs";
 import { EOIAddFacerecPersonInputs } from "./inputs/eoiAddFacerecPersonInputs";
 import { EOIAddFacerecPeopleInputs } from "./inputs/eoiAddFacerecPeopleInputs";
+import { EOIFaceRecognitionConfig } from "./elements/eoiFaceRecognitionConfig";
+import { EOISimilarityConfig } from "./elements/eoiSimilarityConfig";
 
 export class EOIValidator {
     private static MAX_PHONE_NUMBER_LENGTH = 20;
     private static MIN_PROMPT_LENGTH = 1;
-    private static MIN_PROMPT_THRESHOLD = 1;
-    private static MAX_PROMPT_THRESHOLD = 99;
+    private static MIN_CONFIDENCE_THRESHOLD = 1;
+    private static MAX_CONFIDENCE_THRESHOLD = 99;
     private static MIN_FRAME_RATE = 1;
     private static MIN_STREAM_NAME_LENGTH = 3;
     private static MIN_REGION_NAME_LENGTH = 3;
@@ -37,7 +39,10 @@ export class EOIValidator {
     private static MIN_MOTION_THRESHOLD = 10;
     private static MIN_SEARCH_TEXT_LENGTH = 2;
     private static MIN_SEED_ID_LENGTH = 10;
+    private static MIN_IMAGE_LENGTH = 100;
     private static VALID_CLASS_NAMES = ["person", "vehicle", "bag", "animal", "unknown"];
+    private static VALID_DETECTION_TYPE_NAMES = ["natural_language", "face_recognition", "similarity"];
+    private static VALID_FACE_REC_MATCH_TYPE_NAMES = ["person", "group"];
     private static MIN_OBJECT_SIZE = 100;
     private static MIN_ALERT_SECONDS = 0.1;
     private static MIN_RESET_SECONDS = 0.1;
@@ -216,12 +221,12 @@ export class EOIValidator {
             const trimmedPersonId = inputs.face_person_id == null ? null : inputs.face_person_id.trim();
             const trimmedGroupId = inputs.face_group_id == null ? null : inputs.face_group_id.trim();
             const trimmedSeedId = inputs.seed_id == null ? null : inputs.seed_id.trim();
-            
+
             const objDescValid = trimmedObjectDescription != null && trimmedObjectDescription.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const personIdValid = trimmedPersonId != null && trimmedPersonId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const groupIdValid = trimmedGroupId != null && trimmedGroupId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const seedIdValid = trimmedSeedId != null && trimmedSeedId.length >= EOIValidator.MIN_SEED_ID_LENGTH;
-            const imageValid = inputs.image != null && inputs.image.length >= 100;
+            const imageValid = inputs.image != null && inputs.image.length >= EOIValidator.MIN_IMAGE_LENGTH;
 
             if (!objDescValid && !personIdValid && !groupIdValid && !seedIdValid && !imageValid) {
                 response = new EOIResponse(false, `Search must include one of the following: object description, person, group, seed image id or image`);
@@ -245,12 +250,12 @@ export class EOIValidator {
             const trimmedPersonId = inputs.face_person_id == null ? null : inputs.face_person_id.trim();
             const trimmedGroupId = inputs.face_group_id == null ? null : inputs.face_group_id.trim();
             const trimmedSeedId = inputs.seed_id == null ? null : inputs.seed_id.trim();
-            
+
             const objDescValid = trimmedObjectDescription != null && trimmedObjectDescription.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const personIdValid = trimmedPersonId != null && trimmedPersonId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const groupIdValid = trimmedGroupId != null && trimmedGroupId.length >= EOIValidator.MIN_SEARCH_TEXT_LENGTH;
             const seedIdValid = trimmedSeedId != null && trimmedSeedId.length >= EOIValidator.MIN_SEED_ID_LENGTH;
-            const imageValid = inputs.image != null && inputs.image.length >= 100;
+            const imageValid = inputs.image != null && inputs.image.length >= EOIValidator.MIN_IMAGE_LENGTH;
 
             if (!objDescValid && !personIdValid && !groupIdValid && !seedIdValid && !imageValid) {
                 response = new EOIResponse(false, `Search must include one of the following: object description, person, group, seed image id or image`);
@@ -327,7 +332,7 @@ export class EOIValidator {
         }
 
         if (response.success) {
-            if (inputs.image && inputs.image.length < 20) {
+            if (inputs.image && inputs.image.length < EOIValidator.MIN_IMAGE_LENGTH) {
                 response = new EOIResponse(false, `Please provide a valid base64 image string`);
             }
         }
@@ -390,9 +395,9 @@ export class EOIValidator {
 
                     if (validate_for_video) {
                         if (!object_description.background_prompt && object_description.alert) {
-                            if ((object_description.threshold != undefined && object_description.threshold < EOIValidator.MIN_PROMPT_THRESHOLD) ||
-                                (object_description.threshold != undefined && object_description.threshold > EOIValidator.MAX_PROMPT_THRESHOLD)) {
-                                response = new EOIResponse(false, `The object description alerting threshold must be between ${EOIValidator.MIN_PROMPT_THRESHOLD} and ${EOIValidator.MAX_PROMPT_THRESHOLD}. The threshold for object description '${object_description.text}' is ${object_description.threshold}`);
+                            if ((object_description.threshold != undefined && object_description.threshold < EOIValidator.MIN_CONFIDENCE_THRESHOLD) ||
+                                (object_description.threshold != undefined && object_description.threshold > EOIValidator.MAX_CONFIDENCE_THRESHOLD)) {
+                                response = new EOIResponse(false, `The object description alerting threshold must be between ${EOIValidator.MIN_CONFIDENCE_THRESHOLD} and ${EOIValidator.MAX_CONFIDENCE_THRESHOLD}. The threshold for object description '${object_description.text}' is ${object_description.threshold}`);
                             }
                         }
                     }
@@ -452,14 +457,25 @@ export class EOIValidator {
                     if (detection_config.class_name != null && detection_config.class_threshold == null) {
                         response = new EOIResponse(false, `In detection configurations, if a class name is specified, a class threshold must also be specified.`);
                     }
-                    else if (detection_config.class_name != null && !EOIValidator.VALID_CLASS_NAMES.includes(detection_config.class_name.trim())) {
-                        response = new EOIResponse(false, `In detection configurations, class name is not valid. Class name is ${detection_config.class_name}`);
-                    }
                     else if (detection_config.object_size != null && detection_config.object_size < EOIValidator.MIN_OBJECT_SIZE) {
                         response = new EOIResponse(false, `In detection configurations, the object size should be at least ${EOIValidator.MIN_OBJECT_SIZE}. object_size = ${detection_config.object_size}`);
                     }
-                    else {
-                        response = this.validateObjectDescriptions(detection_config.object_descriptions, validateForVideo);
+                    else if (detection_config.detection_type == null || !EOIValidator.VALID_DETECTION_TYPE_NAMES.includes(detection_config.detection_type.trim())) {
+                        response = new EOIResponse(false, `In detection configurations, detection type is not valid. Detection type is ${detection_config.detection_type}`);
+                    }
+                    else if (detection_config.detection_type.trim() == "natural_lanuage") {
+                        if (detection_config.class_name != null && !EOIValidator.VALID_CLASS_NAMES.includes(detection_config.class_name.trim())) {
+                            response = new EOIResponse(false, `In detection configurations, class name is not valid. Class name is ${detection_config.class_name}`);
+                        }
+                        else {
+                            response = this.validateObjectDescriptions(detection_config.object_descriptions, validateForVideo);
+                        }
+                    }
+                    else if (detection_config.detection_type.trim() == "face_recognition") {
+                        response = this.validateFaceRecognitionConfig(detection_config.face_recognition);
+                    }
+                    else if (detection_config.detection_type.trim() == "similarity") {
+                        response = this.validateSimilarityConfig(detection_config.similarity);
                     }
 
                     if (response.success && validateForVideo) {
@@ -771,7 +787,7 @@ export class EOIValidator {
             if (inputs.person_images != null && inputs.person_images.length > 0) {
                 for (const person_image of inputs.person_images) {
                     if (response.success) {
-                        if (person_image.image && person_image.image.length < 20) {
+                        if (person_image.image && person_image.image.length < EOIValidator.MIN_IMAGE_LENGTH) {
                             response = new EOIResponse(false, `Please provide a valid base64 image string`);
                         }
                         else if (person_image.file_path && person_image.file_path.length < 5) {
@@ -820,5 +836,58 @@ export class EOIValidator {
         return trimmedPersonId != null && trimmedPersonId.length > 0 ?
             EOIResponse.success()
             : new EOIResponse(false, `The person ID '${trimmedPersonId}' must be at least ${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH} character${EOIValidator.MIN_FACEREC_PERSON_ID_LENGTH > 1 ? "s" : ""}`);
+    }
+
+    public static validateFaceRecognitionConfig(face_recognition_config: EOIFaceRecognitionConfig | undefined): EOIResponse {
+        let response: EOIResponse = face_recognition_config == null ?
+            new EOIResponse(false, `face recognition config is required when the detection_type / search_type is face_recognition`)
+            : EOIResponse.success();
+
+        // validate match type
+        if (response.success && face_recognition_config) {
+            let match_type = face_recognition_config.match_type;
+
+            if (match_type != null) {
+                match_type = match_type.trim().toLowerCase();
+            }
+
+            if (match_type == null || !EOIValidator.VALID_FACE_REC_MATCH_TYPE_NAMES.includes(match_type)) {
+                response = new EOIResponse(false, `Invalid face recognition match type. Value is ${match_type}`);
+            }
+
+            // validate person / group match params
+            if (response.success) {
+                if (match_type == "person") {
+                    if (!face_recognition_config.person || face_recognition_config.person.length < EOIValidator.MIN_FACEREC_PERSON_NAME_LENGTH) {
+                        response = new EOIResponse(false, `Invalid face recognition person name. Value is ${face_recognition_config.person}`);
+                    }
+                }
+                else if (match_type == "group") {
+                    if (!face_recognition_config.group || face_recognition_config.group.length < EOIValidator.MIN_FACEREC_GROUP_NAME_LENGTH) {
+                        response = new EOIResponse(false, `Invalid face recognition group name. Value is ${face_recognition_config.group}`);
+                    }
+                }
+            }
+        }
+
+        return response;
+    }
+
+    public static validateSimilarityConfig(similarity_config: EOISimilarityConfig | undefined): EOIResponse {
+        let response: EOIResponse = similarity_config == null ?
+            new EOIResponse(false, `similarity config is required when the detection_type / search_type is similarity`)
+            : EOIResponse.success();
+
+        // validate match type
+        if (response.success && similarity_config) {
+            if (similarity_config.image == null || similarity_config.image.length < EOIValidator.MIN_IMAGE_LENGTH) {
+                response = new EOIResponse(false, `Invalid similarity image. Please provide a valid base64 image string`);
+            }
+            else if (similarity_config.match_threshold < EOIValidator.MIN_CONFIDENCE_THRESHOLD || similarity_config.match_threshold > EOIValidator.MAX_CONFIDENCE_THRESHOLD) {
+                response = new EOIResponse(false, `Invalid similarity match threshold. Value must be between ${EOIValidator.MIN_CONFIDENCE_THRESHOLD} and ${EOIValidator.MAX_CONFIDENCE_THRESHOLD}. Value is ${similarity_config.match_threshold}`);
+            }
+        }
+
+        return response;
     }
 }
