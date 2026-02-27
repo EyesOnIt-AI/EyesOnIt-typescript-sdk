@@ -26,6 +26,10 @@ export class EOISearchInputs {
      */
     public image: string | undefined;
     /**
+     * Face recognition match type: `person` or `group`
+     */
+    public face_match_type: string;            // person, group
+    /**
      * Face recognition person ID for targeted face search.
      */
     public face_person_id: string;

@@ -5,7 +5,7 @@ export class EOISimilarityConfig {
     /**
      * Base64-encoded reference image used for similarity matching.
      */
-    public image: string | undefined;
+    public image?: string;
     
     /**
      * Match confidence threshold.

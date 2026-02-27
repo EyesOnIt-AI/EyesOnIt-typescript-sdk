@@ -18,7 +18,7 @@ export class EOIFaceRecognitionConfig {
     /**
      * Optional group identifier for group-level matching.
      */
-    public group?: string | null = null;
+    public group?: string;
 
     public static fromJsonObj(obj: any) {
         let face_recognition_config = undefined;
