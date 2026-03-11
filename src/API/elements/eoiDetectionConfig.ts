@@ -18,9 +18,13 @@ export class EOIDetectionConfig {
      */
     public class_threshold?: number | null = 10;
     /**
-     * Minimum object size filter. Validator minimum is `100` when provided.
+     * Minimum object size filter. Minimum is `100` when provided.
      */
     public object_size?: number = 100;
+    /**
+     * Minimum combined threshold for alerting. Default is 50.
+     */
+    public combined_threshold?: number | null = null;
     /**
      * Optional contour-area filter for motion/object extraction.
      */
@@ -29,11 +33,6 @@ export class EOIDetectionConfig {
      * Optional upper bound for bounding-box area.
      */
     public max_bounding_box_area?: number | null = null;
-    /**
-     * Detection mode.
-     * Supported values: `class_name`, `natural_language`, `face_recognition`, `similarity`.
-     */
-    public detection_type: string | null = null;            // class_name, natural_language, face_recognition, similarity
     /**
      * Natural-language/object prompt list used for matching and alerting.
      */
@@ -77,9 +76,9 @@ export class EOIDetectionConfig {
             detection_config.class_name = obj.class_name;
             detection_config.class_threshold = obj.class_threshold;
             detection_config.object_size = obj.object_size;
+            detection_config.combined_threshold = obj.combined_threshold;
             detection_config.min_contour_area = obj.min_contour_area;
             detection_config.max_bounding_box_area = obj.max_bounding_box_area;
-            detection_config.detection_type = obj.detection_type;
             detection_config.object_descriptions = obj.object_descriptions?.map(EOIObjectDescription.fromJsonObj);
             detection_config.conditions = obj.conditions?.map(EOIDetectionCondition.fromJsonObj);
             detection_config.alert_seconds = obj.alert_seconds;
@@ -100,9 +99,9 @@ export class EOIDetectionConfig {
         detection_config.class_name = null;
         detection_config.class_threshold = null;
         detection_config.object_size = 100;
+        detection_config.combined_threshold = null;
         detection_config.min_contour_area = null;
         detection_config.max_bounding_box_area = null;
-        detection_config.detection_type = "class_name";
         detection_config.object_descriptions = [];
         detection_config.alert_seconds = 5;
         detection_config.reset_seconds = 10;

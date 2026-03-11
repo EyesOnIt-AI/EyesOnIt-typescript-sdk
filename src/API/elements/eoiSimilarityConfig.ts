@@ -1,25 +1,25 @@
+import { EOISimilarityImage } from "./eoiSimilarityImage";
+
 /**
  * Similarity-search configuration used by detection/search requests.
  */
 export class EOISimilarityConfig {
     /**
-     * Base64-encoded reference image used for similarity matching.
+     * Reference images used for similarity matching.
      */
-    public image?: string;
-    
-    /**
-     * Match confidence threshold.
-     * Common range is 0-100; defaults to `80`.
-     */
-    public match_threshold: number = 80;
+    public images: EOISimilarityImage[] = [];
 
     public static fromJsonObj(obj: any) {
         let similarity_config = undefined;
         
         if (obj != null) {
             similarity_config = new EOISimilarityConfig();
-            similarity_config.image = obj.image;
-            similarity_config.match_threshold = obj.match_threshold;
+
+            if (obj.images != null) {
+                similarity_config.images = obj.images
+                    .map(EOISimilarityImage.fromJsonObj)
+                    .filter((image: EOISimilarityImage | undefined): image is EOISimilarityImage => image != null);
+            }
         }
 
         return similarity_config;
@@ -28,8 +28,7 @@ export class EOISimilarityConfig {
     public static default(): EOISimilarityConfig {
         let similarity_config = new EOISimilarityConfig();
 
-        similarity_config.image = undefined;
-        similarity_config.match_threshold = 80;
+        similarity_config.images = [];
 
         return similarity_config;
     }

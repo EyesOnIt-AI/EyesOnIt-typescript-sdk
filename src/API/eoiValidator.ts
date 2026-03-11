@@ -26,6 +26,7 @@ import { EOIAddFacerecPersonInputs } from "./inputs/eoiAddFacerecPersonInputs";
 import { EOIAddFacerecPeopleInputs } from "./inputs/eoiAddFacerecPeopleInputs";
 import { EOIFaceRecognitionConfig } from "./elements/eoiFaceRecognitionConfig";
 import { EOISimilarityConfig } from "./elements/eoiSimilarityConfig";
+import { EOISimilarityImage } from "./elements/eoiSimilarityImage";
 
 export class EOIValidator {
     private static MAX_PHONE_NUMBER_LENGTH = 20;
@@ -41,7 +42,6 @@ export class EOIValidator {
     private static MIN_SEED_ID_LENGTH = 10;
     private static MIN_IMAGE_LENGTH = 100;
     private static VALID_CLASS_NAMES = ["person", "vehicle", "bag", "animal", "unknown"];
-    private static VALID_DETECTION_TYPE_NAMES = ["class_name", "natural_language", "face_recognition", "similarity"];
     private static VALID_FACE_REC_MATCH_TYPE_NAMES = ["person", "group"];
     private static MIN_OBJECT_SIZE = 100;
     private static MIN_ALERT_SECONDS = 0.1;
@@ -312,38 +312,30 @@ export class EOIValidator {
             : EOIResponse.success();
 
         if (response.success) {
-            if (inputs.search_type == null || !EOIValidator.VALID_DETECTION_TYPE_NAMES.includes(inputs.search_type.trim())) {
-                response = new EOIResponse(false, `In search configuration, search type is not valid. Search type is ${inputs.search_type}`);
+            if (inputs.class_name != null && !EOIValidator.VALID_CLASS_NAMES.includes(inputs.class_name.trim())) {
+                response = new EOIResponse(false, `In search configuration, class name is not valid. Class name is ${inputs.class_name}`);
             }
-            else if (inputs.search_type.trim() == "natural_lanuage") {
-                if (inputs.class_name != null && !EOIValidator.VALID_CLASS_NAMES.includes(inputs.class_name.trim())) {
-                    response = new EOIResponse(false, `In search configurations, class name is not valid. Class name is ${inputs.class_name}`);
-                }
-                else {
-                    const trimmedText = inputs.object_description == null ? null : inputs.object_description.trim();
 
-                    if (trimmedText == null || trimmedText.length < EOIValidator.MIN_SEARCH_TEXT_LENGTH) {
-                        response = new EOIResponse(false, `Live search text must be at least ${EOIValidator.MIN_SEARCH_TEXT_LENGTH} character(s). Search text = ${trimmedText}`);
-                    }
+            if (response.success) {
+                if (inputs.object_description != null && inputs.object_description.trim().length < EOIValidator.MIN_PROMPT_LENGTH) {
+                    response = new EOIResponse(false, `In search configuration, object description is not valid. object description is ${inputs.object_description}`);
                 }
             }
-            else if (inputs.search_type.trim() == "face_recognition") {
+
+            if (response.success && inputs.face_match_type != null) {
                 response = this.validateFaceRecognitionConfig(inputs.face_match_type, inputs.face_person_id, inputs.face_group_id);
             }
-            else if (inputs.search_type.trim() == "similarity") {
-                response = this.validateSimilarityConfig(inputs.image, inputs.alert_threshold);
-            }
-        }
 
-        if (response.success) {
-            if (inputs.seed_id && inputs.seed_id.length < 10) {
-                response = new EOIResponse(false, "Please provide a valid similarity search seed ID");
+            if (response.success && inputs.seed_id != null) {
+                if (inputs.seed_id.length < EOIValidator.MIN_SEED_ID_LENGTH) {
+                    response = new EOIResponse(false, "Please provide a valid similarity search seed ID");
+                }
             }
-        }
 
-        if (response.success) {
-            if (inputs.image && inputs.image.length < EOIValidator.MIN_IMAGE_LENGTH) {
-                response = new EOIResponse(false, `Please provide a valid base64 image string`);
+            if (response.success && inputs.image != null) {
+                if (inputs.image.length < EOIValidator.MIN_IMAGE_LENGTH) {
+                    response = new EOIResponse(false, `Please provide a valid base64 image string`);
+                }
             }
         }
 
@@ -470,32 +462,22 @@ export class EOIValidator {
                     else if (detection_config.object_size != null && detection_config.object_size < EOIValidator.MIN_OBJECT_SIZE) {
                         response = new EOIResponse(false, `In detection configurations, the object size should be at least ${EOIValidator.MIN_OBJECT_SIZE}. object_size = ${detection_config.object_size}`);
                     }
-                    else if (detection_config.detection_type == null || !EOIValidator.VALID_DETECTION_TYPE_NAMES.includes(detection_config.detection_type.trim())) {
-                        response = new EOIResponse(false, `In detection configurations, detection type is not valid. Detection type is ${detection_config.detection_type}`);
-                    }
-                    else if (detection_config.detection_type.trim() == "natural_lanuage") {
-                        if (detection_config.class_name != null && !EOIValidator.VALID_CLASS_NAMES.includes(detection_config.class_name.trim())) {
+                    else if (detection_config.class_name != null) {
+                        if (!EOIValidator.VALID_CLASS_NAMES.includes(detection_config.class_name.trim())) {
                             response = new EOIResponse(false, `In detection configurations, class name is not valid. Class name is ${detection_config.class_name}`);
                         }
-                        else {
-                            response = this.validateObjectDescriptions(detection_config.object_descriptions, validateForVideo);
-                        }
                     }
-                    else if (detection_config.detection_type.trim() == "face_recognition") {
-                        if (!detection_config.face_recognition) {
-                            response = new EOIResponse(false, `In detection configurations, detection_type is face_recognition, but face recognition options are not provided.`);
-                        }
-                        else {
-                            response = this.validateFaceRecognitionConfig(detection_config.face_recognition.match_type, detection_config.face_recognition.person, detection_config.face_recognition.group);
-                        }
+
+                    if (response.success) {
+                        response = this.validateObjectDescriptions(detection_config.object_descriptions, validateForVideo);
                     }
-                    else if (detection_config.detection_type.trim() == "similarity") {
-                        if (!detection_config.similarity) {
-                            response = new EOIResponse(false, `similarity config is required when the detection_type / search_type is similarity`);
-                        }
-                        else {
-                            response = this.validateSimilarityConfig(detection_config.similarity.image, detection_config.similarity.match_threshold);
-                        }
+
+                    if (response.success && detection_config.face_recognition != null) {
+                        response = this.validateFaceRecognitionConfig(detection_config.face_recognition.match_type, detection_config.face_recognition.person, detection_config.face_recognition.group);
+                    }
+
+                    if (response.success && detection_config.similarity != null) {
+                        response = this.validateSimilarityConfig(detection_config.similarity.images);
                     }
 
                     if (response.success && validateForVideo) {
@@ -889,19 +871,28 @@ export class EOIValidator {
         return response;
     }
 
-    public static validateSimilarityConfig(image: string | undefined, match_threshold: number): EOIResponse {
-        let response: EOIResponse = EOIResponse.success();
+    public static validateSimilarityConfig(images: EOISimilarityImage[] | undefined): EOIResponse {
+        if (images == null || images.length == 0) {
+            return new EOIResponse(false, `Invalid similarity images. Please provide at least one base64 image string`);
+        }
 
-        // validate match type
-        if (response.success) {
-            if (image == null || image.length < EOIValidator.MIN_IMAGE_LENGTH) {
-                response = new EOIResponse(false, `Invalid similarity image. Please provide a valid base64 image string`);
+        for (let i = 0; i < images.length; i++) {
+            const similarityImage = images[i];
+
+            if (similarityImage.image == null || similarityImage.image.length < EOIValidator.MIN_IMAGE_LENGTH) {
+                return new EOIResponse(false, `Invalid similarity image at index ${i}. Please provide a valid base64 image string`);
             }
-            else if (match_threshold < EOIValidator.MIN_CONFIDENCE_THRESHOLD || match_threshold > EOIValidator.MAX_CONFIDENCE_THRESHOLD) {
-                response = new EOIResponse(false, `Invalid similarity match threshold. Value must be between ${EOIValidator.MIN_CONFIDENCE_THRESHOLD} and ${EOIValidator.MAX_CONFIDENCE_THRESHOLD}. Value is ${match_threshold}`);
+
+            if (similarityImage.alert && similarityImage.threshold == null) {
+                return new EOIResponse(false, `Invalid similarity threshold at index ${i}. threshold is required when alert is true`);
+            }
+
+            if (similarityImage.threshold != null &&
+                (similarityImage.threshold < EOIValidator.MIN_CONFIDENCE_THRESHOLD || similarityImage.threshold > EOIValidator.MAX_CONFIDENCE_THRESHOLD)) {
+                return new EOIResponse(false, `Invalid similarity threshold at index ${i}. Value must be between ${EOIValidator.MIN_CONFIDENCE_THRESHOLD} and ${EOIValidator.MAX_CONFIDENCE_THRESHOLD}. Value is ${similarityImage.threshold}`);
             }
         }
 
-        return response;
+        return EOIResponse.success();
     }
 }

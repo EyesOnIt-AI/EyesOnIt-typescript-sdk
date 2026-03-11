@@ -19,7 +19,7 @@ import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
-import { EOIProcessVideosResponse } from './outputs/eoiProcessVideosResponse';
+import { EOIProcessVideoResponse as EOIProcessVideoResponse } from './outputs/eoiProcessVideoResponse';
 import { EOIRemoveStreamResponse } from './outputs/eoiRemoveStreamResponse';
 import { EOISearchResponse } from './outputs/eoiSearchResponse';
 import { EOIStopMonitoringStreamResponse } from './outputs/eoiStopMonitoringStreamResponse';
@@ -44,7 +44,7 @@ import { EOIAddFacerecPeopleInputs } from './inputs/eoiAddFacerecPeopleInputs';
 export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
     private static readonly addStreamPath = "/add_stream";
-    private static readonly processVideosPath = "/process_videos";
+    private static readonly processVideoPath = "/process_video";
     private static readonly removeStreamPath = "/remove_stream";
     private static readonly monitorStreamPath = "/monitor_stream";
     private static readonly stopMonitorStreamPath = "/stop_monitoring";
@@ -163,12 +163,12 @@ export class EyesOnItAPI {
      * @returns A typed response containing processing status details.
      * @remarks Endpoint: `POST /process_videos`
      */
-    public async processVideo(inputs: EOIProcessVideoInputs): Promise<EOIProcessVideosResponse> {
+    public async processVideo(inputs: EOIProcessVideoInputs): Promise<EOIProcessVideoResponse> {
         let logPrefix = `${this.constructor.name}.processVideo`;
-        let processVideosResponse: EOIProcessVideosResponse = new EOIProcessVideosResponse(EOIValidator.validateProcessVideoInputs(inputs));
+        let processVideosResponse: EOIProcessVideoResponse = new EOIProcessVideoResponse(EOIValidator.validateProcessVideoInputs(inputs));
 
         if (processVideosResponse.success) {
-            let endPoint = `${this.apiBasePath}${EyesOnItAPI.processVideosPath}`;
+            let endPoint = `${this.apiBasePath}${EyesOnItAPI.processVideoPath}`;
 
             const body: any = inputs;
 
@@ -176,9 +176,9 @@ export class EyesOnItAPI {
 
             try {
                 const response = await this.doPost(endPoint, body, logPrefix);
-                processVideosResponse = new EOIProcessVideosResponse(response);
+                processVideosResponse = new EOIProcessVideoResponse(response);
             } catch (error) {
-                processVideosResponse = new EOIProcessVideosResponse(this.handleError(error));
+                processVideosResponse = new EOIProcessVideoResponse(this.handleError(error));
             }
         }
 
