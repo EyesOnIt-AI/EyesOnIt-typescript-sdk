@@ -1,3 +1,4 @@
+import { EOISimilarityConfig } from "../elements/eoiSimilarityConfig";
 
 /**
  * Base search criteria shared by live and archive search requests.
@@ -18,14 +19,6 @@ export class EOISearchInputs {
      */
     public object_description: string;
     /**
-     * Seed image identifier used for similarity search.
-     */
-    public seed_id: string | undefined;
-    /**
-     * Base64-encoded image used for similarity search.
-     */
-    public image: string | undefined;
-    /**
      * Face recognition match type: `person` or `group`
      */
     public face_match_type: string;            // person, group
@@ -43,6 +36,10 @@ export class EOISearchInputs {
      */
     public alert_threshold: number;
     /**
+     * Similarity matching configuration.
+     */
+    public similarity: EOISimilarityConfig | undefined = undefined;
+    /**
      * Optional list of stream URLs to constrain search scope.
      */
     public stream_list: string[] | undefined;
@@ -59,8 +56,8 @@ export class EOISearchInputs {
         this.class_name = obj.class_name;
         this.search_type = obj.search_type;
         this.object_description = obj.object_description;
-        this.seed_id = obj.seed_id;
-        this.image = obj.image;
+        this.similarity = EOISimilarityConfig.fromJsonObj(obj.similarity);
+        this.face_match_type = obj.face_match_type;
         this.face_person_id = obj.face_person_id;
         this.face_group_id = obj.face_group_id;
         this.alert_threshold = obj.threshold;

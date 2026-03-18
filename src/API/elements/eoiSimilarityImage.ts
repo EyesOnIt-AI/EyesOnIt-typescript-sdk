@@ -5,13 +5,17 @@ import * as fs from 'fs';
  */
 export class EOISimilarityImage {
     /**
+     * Result ID of reference image used for similarity matching.
+     */
+    public seed_id?: string;
+    /**
      * Base64-encoded reference image used for similarity matching.
      */
     public image?: string;
     /**
      * Whether this image should trigger alerts when its threshold is met.
      */
-    public alert: boolean = true;
+    public alert: boolean | undefined = undefined;
     /**
      * Alerting threshold for this image.
      * Required when `alert` is `true`.
@@ -31,8 +35,9 @@ export class EOISimilarityImage {
                 imageBase64 = fileContent.toString('base64');
             }
 
+            similarity_image.seed_id = obj.seed_id;
             similarity_image.image = imageBase64;
-            similarity_image.alert = obj.alert == null ? true : obj.alert == true;
+            similarity_image.alert = typeof obj.alert === "boolean" ? obj.alert : undefined;
             similarity_image.threshold = obj.threshold;
         }
 
@@ -42,6 +47,7 @@ export class EOISimilarityImage {
     public static default(): EOISimilarityImage {
         let similarity_image = new EOISimilarityImage();
 
+        similarity_image.seed_id = undefined;
         similarity_image.image = undefined;
         similarity_image.alert = true;
         similarity_image.threshold = 80;

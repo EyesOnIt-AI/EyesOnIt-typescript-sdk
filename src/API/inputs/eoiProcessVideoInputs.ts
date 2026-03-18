@@ -14,6 +14,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
     /**
      * @param name Job/display name for the video process request. Minimum length: 3.
      * @param input_video_path Input video file to process.
+     * @param rotate_video Degrees to rotate the video before processing. Must be 0, 90, 180 or 270.
      * @param output_video_path Output path for generated/annotated video.
      * @param frame_rate Processing frame rate. Default: `5`. Minimum: `1`.
      * @param index_for_search Whether to index results for archive search.
@@ -36,6 +37,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
     constructor(
         public name: string,
         public input_video_path: string, 
+        public rotate_video: number,
         public output_video_path: string, 
         public frame_rate: number = 5,
         public index_for_search: boolean,
@@ -60,6 +62,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
     public static fromJsonObj(obj: any): EOIProcessVideoInputs {
         let inputs = new EOIProcessVideoInputs(obj.name, 
             obj.input_video_path, 
+            obj.rotate_video || undefined,
             obj.output_video_path,
             obj.frame_rate,
             obj.index_for_search,

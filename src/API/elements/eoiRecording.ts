@@ -11,6 +11,7 @@ export class EOIRecording {
         public save_detection_data: boolean, 
         public save_original_copy: boolean, 
         public recording_folder: string, 
+        public output_file_name: string, 
         public include_stream_name: string, 
         public video_recording: EOIVideoRecording, 
         public image_recording: EOIImageRecording) { }
@@ -28,6 +29,7 @@ export class EOIRecording {
                 obj.save_detection_data,
                 obj.save_original_copy,
                 obj.recording_folder,
+                obj.output_file_name,
                 obj.include_stream_name,
                 EOIVideoRecording.fromJsonObj(obj.video_recording) || EOIVideoRecording.noVideoRecording(),
                 EOIImageRecording.fromJsonObj(obj.image_recording) || EOIImageRecording.noImageRecording());
