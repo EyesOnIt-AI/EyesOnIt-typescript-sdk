@@ -43,7 +43,7 @@ export class EOIValidator {
     private static MIN_SEED_ID_LENGTH = 10;
     private static MIN_IMAGE_LENGTH = 100;
     private static VALID_CLASS_NAMES = ["person", "vehicle", "bag", "animal", "unknown"];
-    private static VALID_FACE_REC_MATCH_TYPE_NAMES = ["person", "group"];
+    private static VALID_FACE_REC_MATCH_TYPE_NAMES = ["person", "group", "all_faces"];
     private static MIN_OBJECT_SIZE = 100;
     private static MIN_ALERT_SECONDS = 0.1;
     private static MIN_RESET_SECONDS = 0.1;
@@ -557,11 +557,9 @@ export class EOIValidator {
     }
 
     public static validatePolygon(polygon: EOIVertex[]): EOIResponse {
-        let response: EOIResponse = polygon == null ?
-            new EOIResponse(false, `region must include a polygon`)
-            : EOIResponse.success();
+        let response: EOIResponse = EOIResponse.success();
 
-        if (response.success) {
+        if (polygon != null) {
             if (polygon.length < 3) {
                 response = new EOIResponse(false, `Polygon must contain at least 3 vertices`);
             }
