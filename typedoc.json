@@ -1,14 +1,9 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": [
-    "src/API/EyesOnItAPI.ts",
-    "src/API/eoiResponse.ts",
-    "src/API/REST/IEOIRESTHandler.ts",
-    "src/API/elements",
-    "src/API/inputs",
-    "src/API/outputs"
+    "src/index.ts"
   ],
-  "entryPointStrategy": "expand",
+  "entryPointStrategy": "resolve",
   "plugin": [
     "typedoc-plugin-markdown"
   ],

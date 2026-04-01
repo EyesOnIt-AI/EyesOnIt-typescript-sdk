@@ -3,7 +3,7 @@
  */
 export class EOIFaceRecognitionConfig {
     /**
-     * Match strategy. Typical values are server-defined (for example person/group matching mode).
+     * Match strategy such as `person`, `group`, or `all_faces`.
      */
     public match_type: string;
     /**

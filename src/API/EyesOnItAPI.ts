@@ -10,11 +10,13 @@ import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
 import { EOIArchiveSearchInputs } from './inputs/eoiArchiveSearchInputs';
 import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
+import { EOIUpdateConfigInputs } from './inputs/eoiUpdateConfigInputs';
 import { EOIValidator } from './eoiValidator';
 import { EOIAddStreamResponse } from './outputs/eoiAddStreamResponse';
 import { EOIGetAllStreamsInfoResponse } from './outputs/eoiGetAllStreamsInfoResponse';
 import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionInfoResponse';
 import { EOIGetStreamDetailsResponse } from './outputs/eoiGetStreamDetailsResponse';
+import { EOIGetSupportedClassesResponse } from './outputs/eoiGetSupportedClassesResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
@@ -50,6 +52,7 @@ export class EyesOnItAPI {
     private static readonly stopMonitorStreamPath = "/stop_monitoring";
     private static readonly getAllStreamsInfoPath = "/get_all_streams_info";
     private static readonly getStreamDetailsPath = "/get_stream_details";
+    private static readonly getSupportedClassesPath = "/get_supported_classes";
     private static readonly getLastDetectionInfoPath = "/get_last_detection_info";
     private static readonly getVideoFramePath = "/get_video_frame";
     private static readonly searchLivePath = "/live_search";
@@ -87,6 +90,13 @@ export class EyesOnItAPI {
         this.logger = customLogger || new Logger();
 
         this.logger.debug(`${logPrefix}`);
+    }
+
+    /**
+     * Returns the configured API base URL for this client.
+     */
+    public getBaseUrl(): string {
+        return this.apiBasePath;
     }
 
 
@@ -161,7 +171,7 @@ export class EyesOnItAPI {
      *
      * @param inputs Video metadata and detection configuration.
      * @returns A typed response containing processing status details.
-     * @remarks Endpoint: `POST /process_videos`
+     * @remarks Endpoint: `POST /process_video`
      */
     public async processVideo(inputs: EOIProcessVideoInputs): Promise<EOIProcessVideoResponse> {
         let logPrefix = `${this.constructor.name}.processVideo`;
@@ -320,6 +330,30 @@ export class EyesOnItAPI {
         }
 
         return eoiGetStreamDetailsResponse;
+    }
+
+    /**
+     * Returns the class names supported by the EyesOnIt server.
+     *
+     * @returns A typed response containing supported class names.
+     * @remarks Endpoint: `GET /get_supported_classes`
+     */
+    public async getSupportedClasses(): Promise<EOIGetSupportedClassesResponse> {
+        const logPrefix = `${this.constructor.name}.getSupportedClasses`;
+
+        let getSupportedClassesResponse: EOIGetSupportedClassesResponse;
+
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getSupportedClassesPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response: ${JSON.stringify(eoiResponse)}`);
+
+        getSupportedClassesResponse = new EOIGetSupportedClassesResponse(eoiResponse);
+
+        return getSupportedClassesResponse;
     }
 
     /**
@@ -526,18 +560,18 @@ export class EyesOnItAPI {
     /**
      * Updates runtime configuration on the EyesOnIt server.
      *
-     * @param inputs Arbitrary configuration object accepted by the `/update_config` endpoint.
+     * @param inputs Typed wrapper for the configuration payload accepted by the `/update_config` endpoint.
      * @returns A typed response containing update status details.
      * @remarks Endpoint: `POST /update_config`
      */
-    public async updateConfig(inputs: any): Promise<EOIUpdateConfigResponse> {
+    public async updateConfig(inputs: EOIUpdateConfigInputs): Promise<EOIUpdateConfigResponse> {
         let logPrefix = `${this.constructor.name}.updateConfig`;
-        let updateConfigResponse: EOIUpdateConfigResponse = new EOIUpdateConfigResponse(EOIResponse.success());
+        let updateConfigResponse: EOIUpdateConfigResponse = new EOIUpdateConfigResponse(inputs.validate());
 
         if (updateConfigResponse.success) {
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.updateConfigPath}`;
 
-            const body: any = inputs;
+            const body = inputs.body;
 
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 

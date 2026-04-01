@@ -6,12 +6,7 @@ import { EOIMonitorStreamInputs } from "./inputs/eoiMonitorStreamInputs";
 import { EOIResponse } from "./eoiResponse";
 import { EOIRegion } from "./elements/eoiRegion";
 import { EOIBoundingBox } from "./elements/eoiBoundingBox";
-import { EOIGetLastDetectionInfoInputs } from "./inputs/eoiGetLastDetectionInfoInputs";
-import { EOIPreviewFrameInputs } from "./inputs/eoiGetPreviewFrameInputs";
 import { EOIProcessVideoInputs } from "./inputs/eoiProcessVideoInputs";
-import { EOIRemoveStreamInputs } from "./inputs/eoiRemoveStreamInputs";
-import { EOIVideoFrameInputs as EOIGetVideoFrameInputs } from "./inputs/eoiGetVideoFrameInputs";
-import { EOIStopMonitoringStreamInputs } from "./inputs/eoiStopMonitoringStreamInputs";
 import { EOIObjectDescription } from "./elements/eoiObjectDescription";
 import { EOIVertex } from "./elements/eoiVertex";
 import { EOIMotionDetection } from "./elements/eoiMotionDetection";
@@ -149,66 +144,6 @@ export class EOIValidator {
         // TODO: fill this in
         if (response.success && inputs.frame_rate < EOIValidator.MIN_FRAME_RATE) {
             response = new EOIResponse(false, `the minimum frame rate is ${EOIValidator.MIN_FRAME_RATE}. frame rate = ${inputs.frame_rate}`);
-        }
-
-        return response;
-    }
-
-    public static validateGetPreviewFrameInputs(inputs: EOIPreviewFrameInputs): EOIResponse {
-        let response: EOIResponse = inputs == null ?
-            new EOIResponse(false, "inputs = null. Request must include inputs")
-            : EOIResponse.success();
-
-        if (response.success) {
-            response = this.validateStreamUrl(inputs.streamUrl);
-        }
-
-        return response;
-    }
-
-    public static validateGetVideoFrameInputs(inputs: EOIGetVideoFrameInputs): EOIResponse {
-        let response: EOIResponse = inputs == null ?
-            new EOIResponse(false, "inputs = null. Request must include inputs")
-            : EOIResponse.success();
-
-        if (response.success) {
-            response = this.validateStreamUrl(inputs.streamUrl);
-        }
-
-        return response;
-    }
-
-    public static validateGetLastDetectionInfoInputs(inputs: EOIGetLastDetectionInfoInputs): EOIResponse {
-        let response: EOIResponse = inputs == null ?
-            new EOIResponse(false, "inputs = null. Request must include inputs")
-            : EOIResponse.success();
-
-        if (response.success) {
-            response = this.validateStreamUrl(inputs.streamUrl);
-        }
-
-        return response;
-    }
-
-    public static validateRemoveStreamInputs(inputs: EOIRemoveStreamInputs): EOIResponse {
-        let response: EOIResponse = inputs == null ?
-            new EOIResponse(false, "inputs = null. Request must include inputs")
-            : EOIResponse.success();
-
-        if (response.success) {
-            response = this.validateStreamUrl(inputs.streamUrl);
-        }
-
-        return response;
-    }
-
-    public static validateStopMonitoringStreamInputs(inputs: EOIStopMonitoringStreamInputs): EOIResponse {
-        let response: EOIResponse = inputs == null ?
-            new EOIResponse(false, "inputs = null. Request must include inputs")
-            : EOIResponse.success();
-
-        if (response.success) {
-            response = this.validateStreamUrl(inputs.streamUrl);
         }
 
         return response;

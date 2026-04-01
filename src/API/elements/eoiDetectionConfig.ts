@@ -3,6 +3,7 @@ import { EOIDetectionObject } from "./eoiDetectionObject";
 import { EOIFaceRecognitionConfig } from "./eoiFaceRecognitionConfig";
 import { EOIObjectDescription } from "./eoiObjectDescription";
 import { EOISimilarityConfig } from "./eoiSimilarityConfig";
+import { EOIVMSDetectionConfig } from "./VMS/eoiVMSDetectionConfig";
 
 /**
  * Detection behavior for a region.
@@ -61,6 +62,10 @@ export class EOIDetectionConfig {
      * Optional object-level filters/labels for downstream matching logic.
      */
     public objects?: EOIDetectionObject[];
+    /**
+     * Optional VMS-specific detection configuration.
+     */
+    public vms_config?: EOIVMSDetectionConfig | undefined = undefined;
 
     /**
      * @param init Optional partial initialization object.
@@ -86,6 +91,7 @@ export class EOIDetectionConfig {
             detection_config.objects = obj.objects?.map(EOIDetectionObject.fromJsonObj);
             detection_config.face_recognition = EOIFaceRecognitionConfig.fromJsonObj(obj.face_recognition);
             detection_config.similarity = EOISimilarityConfig.fromJsonObj(obj.similarity);
+            detection_config.vms_config = EOIVMSDetectionConfig.fromJsonObj(obj.vms_config);
         }
         else {
             detection_config = EOIDetectionConfig.default();
