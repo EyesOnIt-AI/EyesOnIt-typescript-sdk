@@ -18,6 +18,16 @@ The TypeScript SDK can be installed from this repository by running:
 
 ```
 npm install
+```
+
+The package now builds both formats:
+
+- ESM for browser bundlers like Vite
+- CommonJS for existing Node.js consumers
+
+If you are working in the SDK repo directly, build artifacts can be regenerated with:
+
+```
 npm run build
 ```
 

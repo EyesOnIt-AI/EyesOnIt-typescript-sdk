@@ -1,5 +1,3 @@
-import * as fs from 'fs';
-
 /**
  * One reference image used for similarity matching.
  */
@@ -22,6 +20,20 @@ export class EOISimilarityImage {
      */
     public threshold?: number;
 
+    private static readImagePathAsBase64(imagePath: string): string {
+        const getRequire = Function("try { return require; } catch { return undefined; }");
+        const nodeRequire = getRequire() as NodeRequire | undefined;
+
+        if (typeof nodeRequire !== "function") {
+            throw new Error("image_path is only supported in Node.js environments. Provide image as base64 when running in the browser.");
+        }
+
+        const fs = nodeRequire("fs") as typeof import("fs");
+        const fileContent = fs.readFileSync(imagePath);
+
+        return fileContent.toString("base64");
+    }
+
     public static fromJsonObj(obj: any) {
         let similarity_image = undefined;
 
@@ -31,8 +43,7 @@ export class EOISimilarityImage {
             let imageBase64 = obj.image;
 
             if (obj.image_path) {
-                let fileContent = fs.readFileSync(obj.image_path);
-                imageBase64 = fileContent.toString('base64');
+                imageBase64 = this.readImagePathAsBase64(obj.image_path);
             }
 
             similarity_image.seed_id = obj.seed_id;
