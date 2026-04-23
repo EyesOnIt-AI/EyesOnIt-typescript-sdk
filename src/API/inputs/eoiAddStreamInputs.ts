@@ -14,6 +14,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
     /**
      * @param stream_url RTSP URL for the stream.
      * @param name Stream display name. Minimum length: 3.
+     * @param frame_width Frame width. Can be null if not available.
+     * @param frame_height Frame height. Can be null if not available.
      * @param frame_rate Processing frame rate. Default: `5`. Minimum: `1`.
      * @param index_for_search Whether this stream should be indexed for archive search.
      * @param search_index_types Search index types to build when indexing is enabled.
@@ -26,6 +28,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
     constructor(
         public stream_url: string, 
         public name: string, 
+        public frame_width: number,
+        public frame_height: number,
         public frame_rate: number = 5,
         public index_for_search: boolean,
         public search_index_types: string[] = [],
@@ -40,6 +44,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
     public static fromJsonObj(obj: any): EOIAddStreamInputs | null {
         let inputs = new EOIAddStreamInputs(obj.stream_url, 
             obj.name,
+            obj.frame_width,
+            obj.frame_height,
             obj.frame_rate,
             obj.index_for_search,
             obj.search_index_types,
