@@ -3,7 +3,7 @@ import { EOIDetection } from "./eoiDetection";
 
 
 export class EOIImageDetection extends EOIDetection {
-    public objects: EOIDetectionObject[];
+    public objects: EOIDetectionObject[] = [];
 
     constructor() {
         super();
@@ -15,7 +15,11 @@ export class EOIImageDetection extends EOIDetection {
         if (obj != null) {
             detection = new EOIImageDetection();
             detection.parseSuperClassFields(obj);
-            detection.objects = obj.objects?.map(EOIDetectionObject.fromJsonObj);
+            detection.objects = Array.isArray(obj.objects)
+                ? obj.objects
+                    .map(EOIDetectionObject.fromJsonObj)
+                    .filter((detectionObject: EOIDetectionObject | undefined): detectionObject is EOIDetectionObject => detectionObject != null)
+                : [];
         }
 
         return detection;

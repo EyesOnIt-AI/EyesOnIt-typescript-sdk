@@ -5,15 +5,19 @@ import { EOIDetection } from "./eoiDetection";
 
 
 export class EOIVideoDetection extends EOIDetection {
-    public stream_url: string;
-    public stream_name: string;
-    public event: string;
-    public time: DateTime;
-    public frame_num: number;
-    public object_description: string;
+    public stream_url?: string | null;
+    public stream_name?: string | null;
+    public event?: string | null;
+    public time?: DateTime;
+    public frame_num?: number | null;
+    public object_description?: string | null;
     public condition?: EOIDetectionCondition;
-    public result_id?: string;
-    public image: string;
+    public total_count?: number | null;
+    public result_id?: string | null;
+    public image?: string | null;
+    public alert_stream_id?: string | null;
+    public alert_id?: string | null;
+    public alert_rtsp_url?: string | null;
 
     constructor() {
         super();
@@ -28,9 +32,16 @@ export class EOIVideoDetection extends EOIDetection {
 
             detection.stream_url = obj.stream_url;
             detection.stream_name = obj.stream_name;
-            detection.time = DateTime.fromISO(obj.time);
+            detection.event = obj.event;
+            detection.time = obj.time != null ? DateTime.fromISO(obj.time) : undefined;
+            detection.frame_num = obj.frame_num;
+            detection.object_description = obj.object_description;
+            detection.total_count = obj.total_count;
             detection.result_id = obj.result_id;
             detection.image = obj.image;
+            detection.alert_stream_id = obj.alert_stream_id;
+            detection.alert_id = obj.alert_id;
+            detection.alert_rtsp_url = obj.alert_rtsp_url;
             detection.condition = EOIDetectionCondition.fromJsonObj(obj.condition);
         }
 
@@ -38,12 +49,7 @@ export class EOIVideoDetection extends EOIDetection {
     }
 
     public getDetectedObjects(): EOIDetectionObject[] | null {
-        if (this.condition != null) {
-            return this.condition.objects;
-        }
-        else {
-            return null;
-        }
+        return this.condition?.objects ?? null;
     }
 
     public getMaxConfidenceDescription(): string | null {

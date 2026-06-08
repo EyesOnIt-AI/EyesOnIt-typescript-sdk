@@ -8,12 +8,15 @@ import {
     EOICountUpdateMessage,
     EOILiveSearchDetectionHandler,
     EOILiveSearchDetectionMessage,
+    EOILiveSearchUpdateData,
+    EOILiveSearchUpdateHandler,
     EOIPerformanceUpdateHandler,
     EOIPerformanceUpdateMessage,
     EOISocketClientOptions,
     EOISocketConnectHandler,
     EOISocketDisconnectHandler,
     EOISocketEventHandlers,
+    EOISubscriptionHandler,
     EOIStreamDetectionHandler,
     EOIStreamDetectionMessage,
     EOIStreamUpdateHandler,
@@ -27,9 +30,12 @@ type ServerEventName =
     | "stream_update"
     | "stream_detection"
     | "performance_update"
+    | "live_search_update"
     | "live_search_detection"
     | "count_update"
-    | "video_processing_update";
+    | "video_processing_update"
+    | "subscribed"
+    | "unsubscribed";
 
 type ClientEventName = "subscribe" | "unsubscribe";
 
@@ -43,9 +49,12 @@ export class EOISocketClient {
     private streamUpdateHandler?: EOIStreamUpdateHandler;
     private streamDetectionHandler?: EOIStreamDetectionHandler;
     private performanceUpdateHandler?: EOIPerformanceUpdateHandler;
+    private liveSearchUpdateHandler?: EOILiveSearchUpdateHandler;
     private liveSearchDetectionHandler?: EOILiveSearchDetectionHandler;
     private countUpdateHandler?: EOICountUpdateHandler;
     private videoProcessingUpdateHandler?: EOIVideoProcessingUpdateHandler;
+    private subscribedHandler?: EOISubscriptionHandler;
+    private unsubscribedHandler?: EOISubscriptionHandler;
     private connectPromise: Promise<void> | null = null;
 
     constructor(private readonly options: EOISocketClientOptions) {
@@ -130,9 +139,12 @@ export class EOISocketClient {
         this.setStreamUpdateHandler(handlers?.handleStreamUpdate?.bind(handlers) ?? null);
         this.setStreamDetectionHandler(handlers?.handleStreamDetection?.bind(handlers) ?? null);
         this.setPerformanceUpdateHandler(handlers?.handlePerformanceUpdate?.bind(handlers) ?? null);
+        this.setLiveSearchUpdateHandler(handlers?.handleLiveSearchUpdate?.bind(handlers) ?? null);
         this.setLiveSearchDetectionHandler(handlers?.handleLiveSearchDetection?.bind(handlers) ?? null);
         this.setCountUpdateHandler(handlers?.handleCountUpdate?.bind(handlers) ?? null);
         this.setVideoProcessingUpdateHandler(handlers?.handleVideoProcessingUpdate?.bind(handlers) ?? null);
+        this.setSubscribedHandler(handlers?.handleSubscribed?.bind(handlers) ?? null);
+        this.setUnsubscribedHandler(handlers?.handleUnsubscribed?.bind(handlers) ?? null);
     }
 
     public setConnectHandler(handler: EOISocketConnectHandler | null): void {
@@ -155,6 +167,10 @@ export class EOISocketClient {
         this.performanceUpdateHandler = handler ?? undefined;
     }
 
+    public setLiveSearchUpdateHandler(handler: EOILiveSearchUpdateHandler | null): void {
+        this.liveSearchUpdateHandler = handler ?? undefined;
+    }
+
     public setLiveSearchDetectionHandler(handler: EOILiveSearchDetectionHandler | null): void {
         this.liveSearchDetectionHandler = handler ?? undefined;
     }
@@ -165,6 +181,14 @@ export class EOISocketClient {
 
     public setVideoProcessingUpdateHandler(handler: EOIVideoProcessingUpdateHandler | null): void {
         this.videoProcessingUpdateHandler = handler ?? undefined;
+    }
+
+    public setSubscribedHandler(handler: EOISubscriptionHandler | null): void {
+        this.subscribedHandler = handler ?? undefined;
+    }
+
+    public setUnsubscribedHandler(handler: EOISubscriptionHandler | null): void {
+        this.unsubscribedHandler = handler ?? undefined;
     }
 
     public joinRoom(room: string): void {
@@ -239,11 +263,33 @@ export class EOISocketClient {
             });
         });
 
+        this.onServerEvent("live_search_update", (room, payload) => {
+            this.liveSearchUpdateHandler?.({
+                room,
+                updates: this.parseLiveSearchUpdates(payload),
+                rawPayload: payload,
+            });
+        });
+
         this.onServerEvent("live_search_detection", (room, payload) => {
             this.liveSearchDetectionHandler?.({
                 room,
                 detections: this.parseDetections(payload),
                 image: this.getImage(payload),
+                rawPayload: payload,
+            });
+        });
+
+        this.onServerEvent("subscribed", (room, payload) => {
+            this.subscribedHandler?.({
+                room: this.getSubscriptionRoom(payload) ?? room,
+                rawPayload: payload,
+            });
+        });
+
+        this.onServerEvent("unsubscribed", (room, payload) => {
+            this.unsubscribedHandler?.({
+                room: this.getSubscriptionRoom(payload) ?? room,
                 rawPayload: payload,
             });
         });
@@ -276,7 +322,7 @@ export class EOISocketClient {
     }
 
     private emit(event: ClientEventName, room: string): void {
-        this.socket.emit(event, room);
+        this.socket.emit(event, { room });
     }
 
     private rejoinRooms(): void {
@@ -384,6 +430,22 @@ export class EOISocketClient {
             updates: rawUpdates.filter((update): update is EOIVideoProcessingUpdate => this.asObject(update) != null),
             isSnapshot,
         };
+    }
+
+    private parseLiveSearchUpdates(payload: unknown): EOILiveSearchUpdateData[] {
+        const rawUpdates = Array.isArray(payload)
+            ? payload
+            : this.getArrayField(payload, "updates");
+
+        return rawUpdates.filter((update): update is EOILiveSearchUpdateData => this.asObject(update) != null);
+    }
+
+    private getSubscriptionRoom(payload: unknown): string | undefined {
+        const payloadObject = this.asObject(payload);
+
+        return typeof payloadObject?.room === "string"
+            ? payloadObject.room
+            : undefined;
     }
 
     private getArrayField(payload: unknown, key: string): unknown[] {

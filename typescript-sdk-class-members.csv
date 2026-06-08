@@ -9,6 +9,8 @@ src/API/elements/eoiBoundingBox.ts,eoiBoundingBox.ts,EOIBoundingBox,,width
 src/API/elements/eoiBoundingBox.ts,eoiBoundingBox.ts,EOIBoundingBox,,height
 src/API/elements/eoiDetection.ts,eoiDetection.ts,EOIDetection,constructor,
 src/API/elements/eoiDetection.ts,eoiDetection.ts,EOIDetection,parseSuperClassFields,
+src/API/elements/eoiDetection.ts,eoiDetection.ts,EOIDetection,getDetectedObjects,
+src/API/elements/eoiDetection.ts,eoiDetection.ts,EOIDetection,getObjectByDescription,
 src/API/elements/eoiDetection.ts,eoiDetection.ts,EOIDetection,,region
 src/API/elements/eoiDetection.ts,eoiDetection.ts,EOIDetection,,class_name
 src/API/elements/eoiDetectionCondition.ts,eoiDetectionCondition.ts,EOIDetectionCondition,constructor,
@@ -38,10 +40,14 @@ src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,
 src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,getConfidenceForDescription,
 src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,getMaxConfidenceDescription,
 src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,object_descriptions
+src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,detection_type
+src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,detection_types
 src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,class_confidence
+src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,class_name
 src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,bounds
 src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,image
 src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,face
+src/API/elements/eoiDetectionObject.ts,eoiDetectionObject.ts,EOIDetectionObject,,similarity
 src/API/elements/eoiEffects.ts,eoiEffects.ts,EOIEffects,constructor,
 src/API/elements/eoiEffects.ts,eoiEffects.ts,EOIEffects,fromJsonObj,
 src/API/elements/eoiEffects.ts,eoiEffects.ts,EOIEffects,,show_motion
@@ -64,6 +70,7 @@ src/API/elements/eoiFaceDetectionObject.ts,eoiFaceDetectionObject.ts,EOIFaceDete
 src/API/elements/eoiFaceDetectionObject.ts,eoiFaceDetectionObject.ts,EOIFaceDetectionObject,,face_quality
 src/API/elements/eoiFaceDetectionObject.ts,eoiFaceDetectionObject.ts,EOIFaceDetectionObject,,group_external_id
 src/API/elements/eoiFaceDetectionObject.ts,eoiFaceDetectionObject.ts,EOIFaceDetectionObject,,group_display_name
+src/API/elements/eoiFaceDetectionObject.ts,eoiFaceDetectionObject.ts,EOIFaceDetectionObject,,image
 src/API/elements/eoiFaceRecognitionConfig.ts,eoiFaceRecognitionConfig.ts,EOIFaceRecognitionConfig,fromJsonObj,
 src/API/elements/eoiFaceRecognitionConfig.ts,eoiFaceRecognitionConfig.ts,EOIFaceRecognitionConfig,default,
 src/API/elements/eoiFaceRecognitionConfig.ts,eoiFaceRecognitionConfig.ts,EOIFaceRecognitionConfig,,match_type
@@ -195,8 +202,12 @@ src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,ti
 src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,frame_num
 src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,object_description
 src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,condition
+src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,total_count
 src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,result_id
 src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,image
+src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,alert_stream_id
+src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,alert_id
+src/API/elements/eoiVideoDetection.ts,eoiVideoDetection.ts,EOIVideoDetection,,alert_rtsp_url
 src/API/elements/eoiVideoRecording.ts,eoiVideoRecording.ts,EOIVideoRecording,constructor,
 src/API/elements/eoiVideoRecording.ts,eoiVideoRecording.ts,EOIVideoRecording,fromJsonObj,
 src/API/elements/eoiVideoRecording.ts,eoiVideoRecording.ts,EOIVideoRecording,noVideoRecording,

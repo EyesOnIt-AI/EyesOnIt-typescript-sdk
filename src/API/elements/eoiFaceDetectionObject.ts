@@ -1,12 +1,13 @@
 
 export class EOIFaceDetectionObject {
     constructor(
-        public person_external_id: string,
-        public person_display_name: string,
-        public confidence: number,
-        public face_quality: number,
-        public group_external_id?: string,
-        public group_display_name?: string) { }
+        public person_external_id?: string | null,
+        public person_display_name?: string | null,
+        public confidence?: number | null,
+        public face_quality?: number | null,
+        public group_external_id?: string | null,
+        public group_display_name?: string | null,
+        public image?: string | null) { }
 
 
     public static fromJsonObj(obj: any) {
@@ -19,7 +20,8 @@ export class EOIFaceDetectionObject {
                 obj.confidence,
                 obj.face_quality,
                 obj.group_external_id,
-                obj.group_display_name);
+                obj.group_display_name,
+                obj.image);
         }
 
         return result;

@@ -1,3 +1,4 @@
 dist
 node_modules
 generated/docs/sdk-api
+typescript-sdk-class-members.csv

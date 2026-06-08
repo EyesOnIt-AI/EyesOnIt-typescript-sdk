@@ -17,7 +17,11 @@ export class EOIDetectionCondition {
                 obj.count,
                 obj.line_name,
                 obj.alert_direction,
-                obj.objects?.map(EOIDetectionObject.fromJsonObj),
+                Array.isArray(obj.objects)
+                    ? obj.objects
+                        .map(EOIDetectionObject.fromJsonObj)
+                        .filter((detectionObject: EOIDetectionObject | undefined): detectionObject is EOIDetectionObject => detectionObject != null)
+                    : null,
             );
         }
 
@@ -26,16 +30,16 @@ export class EOIDetectionCondition {
 
     public getMaxConfidenceObject(): [string, number] | null {
         let maxConfidence = -1;
-        let maxConfidenceDescription: string | undefined;
+        let maxConfidenceDescription: string | null | undefined;
 
         if (this.objects != null) {
             for (const obj of this.objects) {
                 let confidence = 0;
-                let description: string | undefined;
+                let description: string | null | undefined;
 
                 switch (obj.detection_type) {
                     case "class_name":
-                        confidence = obj.class_confidence;
+                        confidence = obj.class_confidence || 0;
                         description = obj.class_name || "";
                         break;
                     case "natural_language":

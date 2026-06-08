@@ -84,11 +84,19 @@ export class EOIDetectionConfig {
             detection_config.combined_threshold = obj.combined_threshold;
             detection_config.min_contour_area = obj.min_contour_area;
             detection_config.max_bounding_box_area = obj.max_bounding_box_area;
-            detection_config.object_descriptions = obj.object_descriptions?.map(EOIObjectDescription.fromJsonObj);
+            detection_config.object_descriptions = Array.isArray(obj.object_descriptions)
+                ? obj.object_descriptions
+                    .map(EOIObjectDescription.fromJsonObj)
+                    .filter((objectDescription: EOIObjectDescription | undefined): objectDescription is EOIObjectDescription => objectDescription != null)
+                : [];
             detection_config.conditions = obj.conditions?.map(EOIDetectionCondition.fromJsonObj);
             detection_config.alert_seconds = obj.alert_seconds;
             detection_config.reset_seconds = obj.reset_seconds;
-            detection_config.objects = obj.objects?.map(EOIDetectionObject.fromJsonObj);
+            detection_config.objects = Array.isArray(obj.objects)
+                ? obj.objects
+                    .map(EOIDetectionObject.fromJsonObj)
+                    .filter((detectionObject: EOIDetectionObject | undefined): detectionObject is EOIDetectionObject => detectionObject != null)
+                : undefined;
             detection_config.face_recognition = EOIFaceRecognitionConfig.fromJsonObj(obj.face_recognition);
             detection_config.similarity = EOISimilarityConfig.fromJsonObj(obj.similarity);
             detection_config.vms_config = EOIVMSDetectionConfig.fromJsonObj(obj.vms_config);

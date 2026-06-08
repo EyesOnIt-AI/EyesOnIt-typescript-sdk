@@ -3,13 +3,17 @@ export class EOIObjectDescription {
 
     constructor(
         public text: string, 
-        public background_prompt: boolean = false,
+        public background_prompt: boolean | null = false,
         public alert: boolean = true,
         public threshold?: number, 
         public confidence?: number, 
         public over_threshold: boolean = false) { }
 
     public static fromJsonObj(obj: any) {
+        if (obj == null) {
+            return undefined;
+        }
+
         let object_description = new EOIObjectDescription(
             obj.text,
             obj.background_prompt,

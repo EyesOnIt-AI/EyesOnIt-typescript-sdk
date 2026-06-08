@@ -1,7 +1,7 @@
 
 export class EOISimilarityDetectionObject {
     constructor(
-        public confidence: number) 
+        public confidence?: number | null) 
         { }
 
 
