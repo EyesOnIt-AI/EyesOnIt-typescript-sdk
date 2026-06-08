@@ -6,6 +6,7 @@ export * from "./eoiGetFacerecGroupsResponse";
 export * from "./eoiGetLastDetectionInfoResponse";
 export * from "./eoiGetStreamDetailsResponse";
 export * from "./eoiGetVideoFrameResponse";
+export * from "./eoiHealthResponse";
 export * from "./eoiLiveSearchResponse";
 export * from "./eoiMonitorStreamResponse";
 export * from "./eoiProcessImageResponse";

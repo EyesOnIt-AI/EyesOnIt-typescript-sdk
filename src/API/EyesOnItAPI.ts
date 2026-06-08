@@ -18,6 +18,7 @@ import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionIn
 import { EOIGetStreamDetailsResponse } from './outputs/eoiGetStreamDetailsResponse';
 import { EOIGetSupportedClassesResponse } from './outputs/eoiGetSupportedClassesResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
+import { EOIHealthResponse } from './outputs/eoiHealthResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
@@ -70,6 +71,7 @@ export class EyesOnItAPI {
     private static readonly facerecAddPeoplePath = "/facerec_add_people";
     private static readonly facerecRemovePersonPath = "/facerec_remove_person";
     private static readonly facerecPersonDetails = "/facerec_person_details";
+    private static readonly healthPath = "/health";
     
     private logger;
 
@@ -97,6 +99,26 @@ export class EyesOnItAPI {
      */
     public getBaseUrl(): string {
         return this.apiBasePath;
+    }
+
+    /**
+     * Returns server health metrics.
+     *
+     * @returns A typed response containing GPU, system, and raw health payload data.
+     * @remarks Endpoint: `GET /health`
+     */
+    public async health(): Promise<EOIHealthResponse> {
+        const logPrefix = `${this.constructor.name}.health`;
+
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.healthPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response: ${JSON.stringify(eoiResponse)}`);
+
+        return new EOIHealthResponse(eoiResponse);
     }
 
 
@@ -885,4 +907,3 @@ export class EyesOnItAPI {
         return new EOIResponse(false, `error: ${ExceptionUtil.getErrorMessage(error)}`);
     }
 }
-
