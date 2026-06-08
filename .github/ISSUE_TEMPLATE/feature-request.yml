@@ -1,0 +1,24 @@
+name: Feature request
+description: Request a TypeScript SDK feature.
+title: "[TypeScript SDK Feature]: "
+labels: ["feature", "typescript-sdk"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal and users
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and constraints
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+    validations:
+      required: true
+
