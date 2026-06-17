@@ -1,24 +1,29 @@
 import { io, Socket } from "socket.io-client";
-import { EOIStreamInfo } from "../API/elements/eoiStreamInfo";
 import { EOIVideoDetection } from "../API/elements/eoiVideoDetection";
-import { EOISocketRooms } from "./eoiSocketRooms";
+import { EOISocketRoomNames, EOISocketRooms } from "./eoiSocketRooms";
 import {
     EOICountData,
     EOICountUpdateHandler,
     EOICountUpdateMessage,
+    EOILiveSearchChange,
     EOILiveSearchDetectionHandler,
     EOILiveSearchDetectionMessage,
     EOILiveSearchUpdateData,
     EOILiveSearchUpdateHandler,
+    EOILiveSearchUpdateMessage,
     EOIPerformanceUpdateHandler,
     EOIPerformanceUpdateMessage,
     EOISocketClientOptions,
     EOISocketConnectHandler,
     EOISocketDisconnectHandler,
     EOISocketEventHandlers,
+    EOISocketStreamInfo,
+    EOISubscriptionErrorHandler,
+    EOISubscriptionErrorMessage,
     EOISubscriptionHandler,
     EOIStreamDetectionHandler,
     EOIStreamDetectionMessage,
+    EOIStreamChange,
     EOIStreamUpdateHandler,
     EOIStreamUpdateMessage,
     EOIVideoProcessingUpdate,
@@ -35,9 +40,10 @@ type ServerEventName =
     | "count_update"
     | "video_processing_update"
     | "subscribed"
-    | "unsubscribed";
+    | "unsubscribed"
+    | "subscription_error";
 
-type ClientEventName = "subscribe" | "unsubscribe";
+type ClientEventName = "subscribe" | "unsubscribe" | "request_snapshot";
 
 export class EOISocketClient {
     private readonly socket: Socket;
@@ -55,7 +61,10 @@ export class EOISocketClient {
     private videoProcessingUpdateHandler?: EOIVideoProcessingUpdateHandler;
     private subscribedHandler?: EOISubscriptionHandler;
     private unsubscribedHandler?: EOISubscriptionHandler;
+    private subscriptionErrorHandler?: EOISubscriptionErrorHandler;
     private connectPromise: Promise<void> | null = null;
+    private readonly lastSequenceByRoom: Map<string, number> = new Map<string, number>();
+    private readonly serverInstanceIdByRoom: Map<string, string> = new Map<string, string>();
 
     constructor(private readonly options: EOISocketClientOptions) {
         this.clientId = this.options.useClientIdQueryParam === false
@@ -145,6 +154,7 @@ export class EOISocketClient {
         this.setVideoProcessingUpdateHandler(handlers?.handleVideoProcessingUpdate?.bind(handlers) ?? null);
         this.setSubscribedHandler(handlers?.handleSubscribed?.bind(handlers) ?? null);
         this.setUnsubscribedHandler(handlers?.handleUnsubscribed?.bind(handlers) ?? null);
+        this.setSubscriptionErrorHandler(handlers?.handleSubscriptionError?.bind(handlers) ?? null);
     }
 
     public setConnectHandler(handler: EOISocketConnectHandler | null): void {
@@ -191,6 +201,10 @@ export class EOISocketClient {
         this.unsubscribedHandler = handler ?? undefined;
     }
 
+    public setSubscriptionErrorHandler(handler: EOISubscriptionErrorHandler | null): void {
+        this.subscriptionErrorHandler = handler ?? undefined;
+    }
+
     public joinRoom(room: string): void {
         if (room == null || room.length === 0) {
             return;
@@ -228,6 +242,14 @@ export class EOISocketClient {
         return room;
     }
 
+    public requestSnapshot(room: string): void {
+        if (room == null || room.length === 0 || !this.socket.connected) {
+            return;
+        }
+
+        this.emit("request_snapshot", room);
+    }
+
     private registerInternalListeners(): void {
         this.socket.on("connect", () => {
             this.rejoinRooms();
@@ -239,11 +261,12 @@ export class EOISocketClient {
         });
 
         this.onServerEvent("stream_update", (room, payload) => {
-            this.streamUpdateHandler?.({
-                room,
-                streamInfos: this.parseStreamInfos(payload),
-                rawPayload: payload,
-            });
+            const message = this.parseStreamUpdateEnvelope(payload);
+            if (message == null || !this.trackSequence(message.room ?? room, message)) {
+                return;
+            }
+
+            this.streamUpdateHandler?.(message);
         });
 
         this.onServerEvent("stream_detection", (room, payload) => {
@@ -256,19 +279,22 @@ export class EOISocketClient {
         });
 
         this.onServerEvent("performance_update", (room, payload) => {
-            this.performanceUpdateHandler?.({
-                room,
-                data: payload,
-                rawPayload: payload,
-            });
+            const message = this.parsePerformanceUpdate(payload);
+            const performanceRoom = room ?? EOISocketRoomNames.allPerformanceUpdates;
+            if (message == null || !this.trackSequence(performanceRoom, message)) {
+                return;
+            }
+
+            this.performanceUpdateHandler?.(message);
         });
 
         this.onServerEvent("live_search_update", (room, payload) => {
-            this.liveSearchUpdateHandler?.({
-                room,
-                updates: this.parseLiveSearchUpdates(payload),
-                rawPayload: payload,
-            });
+            const message = this.parseLiveSearchUpdateEnvelope(payload);
+            if (message == null || !this.trackSequence(message.room ?? room, message)) {
+                return;
+            }
+
+            this.liveSearchUpdateHandler?.(message);
         });
 
         this.onServerEvent("live_search_detection", (room, payload) => {
@@ -292,6 +318,10 @@ export class EOISocketClient {
                 room: this.getSubscriptionRoom(payload) ?? room,
                 rawPayload: payload,
             });
+        });
+
+        this.onServerEvent("subscription_error", (room, payload) => {
+            this.subscriptionErrorHandler?.(this.parseSubscriptionError(payload, room));
         });
 
         this.onServerEvent("count_update", (room, payload) => {
@@ -381,14 +411,39 @@ export class EOISocketClient {
         };
     }
 
-    private parseStreamInfos(payload: unknown): EOIStreamInfo[] {
-        const streamInfoObjects = Array.isArray(payload)
-            ? payload
-            : this.getArrayField(payload, "streams");
+    private parseStreamUpdateEnvelope(payload: unknown): EOIStreamUpdateMessage | null {
+        const payloadObject = this.asObject(payload);
+        const base = this.parseSequencedBase(payloadObject, true);
+        if (base == null) {
+            return null;
+        }
+        const room = base.room;
+        if (room == null || base.message_type == null) {
+            return null;
+        }
 
-        return streamInfoObjects
-            .map((streamInfo) => EOIStreamInfo.fromJsonObj(streamInfo))
-            .filter((streamInfo): streamInfo is EOIStreamInfo => streamInfo != null);
+        if (base.message_type === "snapshot") {
+            return {
+                ...base,
+                room,
+                message_type: "snapshot",
+                streams: this.getArrayField(payloadObject, "streams")
+                    .filter((stream): stream is EOISocketStreamInfo => this.asObject(stream) != null),
+            };
+        }
+
+        if (base.message_type === "delta") {
+            return {
+                ...base,
+                room,
+                message_type: "delta",
+                changes: this.getArrayField(payloadObject, "changes")
+                    .map((change) => this.parseStreamChange(change))
+                    .filter((change): change is EOIStreamChange => change != null),
+            };
+        }
+
+        return null;
     }
 
     private parseDetections(payload: unknown): EOIVideoDetection[] {
@@ -432,12 +487,181 @@ export class EOISocketClient {
         };
     }
 
-    private parseLiveSearchUpdates(payload: unknown): EOILiveSearchUpdateData[] {
-        const rawUpdates = Array.isArray(payload)
-            ? payload
-            : this.getArrayField(payload, "updates");
+    private parseLiveSearchUpdateEnvelope(payload: unknown): EOILiveSearchUpdateMessage | null {
+        const payloadObject = this.asObject(payload);
+        const base = this.parseSequencedBase(payloadObject, true);
+        if (base == null) {
+            return null;
+        }
+        const room = base.room;
+        if (room == null || base.message_type == null) {
+            return null;
+        }
 
-        return rawUpdates.filter((update): update is EOILiveSearchUpdateData => this.asObject(update) != null);
+        if (base.message_type === "snapshot") {
+            return {
+                ...base,
+                room,
+                message_type: "snapshot",
+                live_searches: this.getArrayField(payloadObject, "live_searches")
+                    .filter((update): update is EOILiveSearchUpdateData => this.asObject(update) != null),
+            };
+        }
+
+        if (base.message_type === "delta") {
+            return {
+                ...base,
+                room,
+                message_type: "delta",
+                changes: this.getArrayField(payloadObject, "changes")
+                    .map((change) => this.parseLiveSearchChange(change))
+                    .filter((change): change is EOILiveSearchChange => change != null),
+            };
+        }
+
+        return null;
+    }
+
+    private parsePerformanceUpdate(payload: unknown): EOIPerformanceUpdateMessage | null {
+        const payloadObject = this.asObject(payload);
+        const base = this.parseSequencedBase(payloadObject, false);
+        if (base == null) {
+            return null;
+        }
+
+        const systemObject = this.asObject(payloadObject?.system);
+
+        return {
+            schema_version: base.schema_version,
+            server_instance_id: base.server_instance_id,
+            sequence: base.sequence,
+            sent_at: base.sent_at,
+            gpus: this.getArrayField(payloadObject, "gpus")
+                .map((gpu) => this.asObject(gpu))
+                .filter((gpu): gpu is Record<string, unknown> => gpu != null)
+                .map((gpu) => ({
+                    index: Number(gpu.index),
+                    util_pct: this.toNullableNumber(gpu.util_pct),
+                    vram_pct: this.toNullableNumber(gpu.vram_pct),
+                }))
+                .filter((gpu) => Number.isFinite(gpu.index)),
+            system: {
+                cpu_pct: this.toNullableNumber(systemObject?.cpu_pct),
+                ram_pct: this.toNullableNumber(systemObject?.ram_pct),
+            },
+        };
+    }
+
+    private parseSequencedBase(payloadObject: Record<string, unknown> | null, requireMessageType: boolean): {
+        schema_version: number;
+        server_instance_id: string;
+        sequence: number;
+        sent_at: string;
+        room?: string;
+        message_type?: "snapshot" | "delta";
+    } | null {
+        if (payloadObject == null) {
+            return null;
+        }
+
+        const schemaVersion = Number(payloadObject.schema_version);
+        const serverInstanceId = typeof payloadObject.server_instance_id === "string"
+            ? payloadObject.server_instance_id
+            : "";
+        const sequence = Number(payloadObject.sequence);
+        const sentAt = typeof payloadObject.sent_at === "string"
+            ? payloadObject.sent_at
+            : "";
+        const room = typeof payloadObject.room === "string"
+            ? payloadObject.room
+            : undefined;
+        const messageType = payloadObject.message_type === "snapshot" || payloadObject.message_type === "delta"
+            ? payloadObject.message_type
+            : undefined;
+
+        if (!Number.isFinite(schemaVersion) || serverInstanceId.length === 0 || !Number.isFinite(sequence) || sentAt.length === 0) {
+            return null;
+        }
+
+        if (requireMessageType && (room == null || messageType == null)) {
+            return null;
+        }
+
+        return {
+            schema_version: schemaVersion,
+            server_instance_id: serverInstanceId,
+            room,
+            message_type: messageType,
+            sequence,
+            sent_at: sentAt,
+        };
+    }
+
+    private parseStreamChange(change: unknown): EOIStreamChange | null {
+        const changeObject = this.asObject(change);
+        if (changeObject?.op === "upsert") {
+            const stream = this.asObject(changeObject.stream);
+            return stream == null ? null : { op: "upsert", stream: stream as EOISocketStreamInfo };
+        }
+
+        if (changeObject?.op === "delete") {
+            return {
+                op: "delete",
+                stream_id: this.toNullableString(changeObject.stream_id),
+                stream_url: this.toNullableString(changeObject.stream_url),
+            };
+        }
+
+        return null;
+    }
+
+    private parseLiveSearchChange(change: unknown): EOILiveSearchChange | null {
+        const changeObject = this.asObject(change);
+        if (changeObject?.op === "upsert") {
+            const liveSearch = this.asObject(changeObject.live_search);
+            return liveSearch == null
+                ? null
+                : { op: "upsert", live_search: liveSearch as EOILiveSearchUpdateData };
+        }
+
+        if (changeObject?.op === "delete") {
+            const searchId = Number(changeObject.search_id);
+            return Number.isFinite(searchId) ? { op: "delete", search_id: searchId } : null;
+        }
+
+        return null;
+    }
+
+    private trackSequence(
+        room: string | undefined,
+        message: { server_instance_id: string; sequence: number; message_type?: string },
+    ): boolean {
+        if (room == null || room.length === 0 || !Number.isFinite(message.sequence)) {
+            return true;
+        }
+
+        const previousServerInstanceId = this.serverInstanceIdByRoom.get(room);
+        if (previousServerInstanceId !== message.server_instance_id) {
+            this.serverInstanceIdByRoom.set(room, message.server_instance_id);
+            this.lastSequenceByRoom.set(room, message.sequence);
+            return true;
+        }
+
+        const previousSequence = this.lastSequenceByRoom.get(room);
+        if (previousSequence != null && message.sequence <= previousSequence) {
+            return false;
+        }
+
+        if (
+            previousSequence != null
+            && message.sequence > previousSequence + 1
+            && message.message_type !== "snapshot"
+        ) {
+            this.requestSnapshot(room);
+        }
+
+        this.lastSequenceByRoom.set(room, message.sequence);
+        return true;
     }
 
     private getSubscriptionRoom(payload: unknown): string | undefined {
@@ -446,6 +670,16 @@ export class EOISocketClient {
         return typeof payloadObject?.room === "string"
             ? payloadObject.room
             : undefined;
+    }
+
+    private parseSubscriptionError(payload: unknown, room: string | undefined): EOISubscriptionErrorMessage {
+        const payloadObject = this.asObject(payload);
+
+        return {
+            room: this.getSubscriptionRoom(payload) ?? room,
+            message: typeof payloadObject?.message === "string" ? payloadObject.message : undefined,
+            rawPayload: payload,
+        };
     }
 
     private getArrayField(payload: unknown, key: string): unknown[] {
@@ -461,6 +695,23 @@ export class EOISocketClient {
         }
 
         return null;
+    }
+
+    private toNullableNumber(value: unknown): number | null {
+        if (value == null) {
+            return null;
+        }
+
+        const numberValue = Number(value);
+        return Number.isFinite(numberValue) ? numberValue : null;
+    }
+
+    private toNullableString(value: unknown): string | null {
+        if (value == null) {
+            return null;
+        }
+
+        return typeof value === "string" ? value : String(value);
     }
 
     private static createClientId(): string {

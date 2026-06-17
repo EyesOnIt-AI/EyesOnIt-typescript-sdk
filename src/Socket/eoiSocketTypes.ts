@@ -1,5 +1,4 @@
 import type { ManagerOptions, SocketOptions } from "socket.io-client";
-import { EOIStreamInfo } from "../API/elements/eoiStreamInfo";
 import { EOIVideoDetection } from "../API/elements/eoiVideoDetection";
 
 export type EOIVideoId = string | number;
@@ -38,7 +37,6 @@ export interface EOISocketNotificationData {
 
 export interface EOILiveSearchUpdateSimilarityImageData {
     seed_id?: number | null;
-    image?: string | null;
     alert?: boolean | null;
     threshold?: number | null;
 }
@@ -65,11 +63,72 @@ export interface EOILiveSearchUpdateData {
     [key: string]: unknown;
 }
 
-export interface EOIStreamUpdateMessage {
-    room?: string;
-    streamInfos: EOIStreamInfo[];
-    rawPayload: unknown;
+export type EOISocketEnvelopeMessageType = "snapshot" | "delta";
+
+export interface EOISocketEnvelopeBase {
+    schema_version: number;
+    server_instance_id: string;
+    room: string;
+    message_type: EOISocketEnvelopeMessageType;
+    sequence: number;
+    sent_at: string;
 }
+
+export interface EOISocketStreamInfo {
+    stream_id?: string | null;
+    stream_url?: string | null;
+    name?: string | null;
+    status?: string | null;
+}
+
+export interface EOIStreamUpsertChange {
+    op: "upsert";
+    stream: EOISocketStreamInfo;
+}
+
+export interface EOIStreamDeleteChange {
+    op: "delete";
+    stream_id?: string | null;
+    stream_url?: string | null;
+}
+
+export type EOIStreamChange = EOIStreamUpsertChange | EOIStreamDeleteChange;
+
+export interface EOIStreamSnapshotEnvelope extends EOISocketEnvelopeBase {
+    message_type: "snapshot";
+    streams: EOISocketStreamInfo[];
+}
+
+export interface EOIStreamDeltaEnvelope extends EOISocketEnvelopeBase {
+    message_type: "delta";
+    changes: EOIStreamChange[];
+}
+
+export type EOIStreamUpdateMessage = EOIStreamSnapshotEnvelope | EOIStreamDeltaEnvelope;
+
+export interface EOILiveSearchUpsertChange {
+    op: "upsert";
+    live_search: EOILiveSearchUpdateData;
+}
+
+export interface EOILiveSearchDeleteChange {
+    op: "delete";
+    search_id: number;
+}
+
+export type EOILiveSearchChange = EOILiveSearchUpsertChange | EOILiveSearchDeleteChange;
+
+export interface EOILiveSearchSnapshotEnvelope extends EOISocketEnvelopeBase {
+    message_type: "snapshot";
+    live_searches: EOILiveSearchUpdateData[];
+}
+
+export interface EOILiveSearchDeltaEnvelope extends EOISocketEnvelopeBase {
+    message_type: "delta";
+    changes: EOILiveSearchChange[];
+}
+
+export type EOILiveSearchUpdateMessage = EOILiveSearchSnapshotEnvelope | EOILiveSearchDeltaEnvelope;
 
 export interface EOIDetectionMessage {
     room?: string;
@@ -84,10 +143,24 @@ export interface EOIStreamDetectionMessage extends EOIDetectionMessage {
 export interface EOILiveSearchDetectionMessage extends EOIDetectionMessage {
 }
 
-export interface EOIPerformanceUpdateMessage<T = unknown> {
-    room?: string;
-    data: T;
-    rawPayload: T;
+export interface EOIPerformanceGpuUpdate {
+    index: number;
+    util_pct?: number | null;
+    vram_pct?: number | null;
+}
+
+export interface EOIPerformanceSystemUpdate {
+    cpu_pct?: number | null;
+    ram_pct?: number | null;
+}
+
+export interface EOIPerformanceUpdateMessage {
+    schema_version: number;
+    server_instance_id: string;
+    sequence: number;
+    sent_at: string;
+    gpus: EOIPerformanceGpuUpdate[];
+    system: EOIPerformanceSystemUpdate;
 }
 
 export interface EOICountUpdateMessage {
@@ -103,15 +176,13 @@ export interface EOIVideoProcessingUpdateMessage {
     rawPayload: unknown;
 }
 
-export interface EOILiveSearchUpdateMessage {
-    room?: string;
-    updates: EOILiveSearchUpdateData[];
-    rawPayload: unknown;
-}
-
 export interface EOISubscriptionMessage {
     room?: string;
     rawPayload: unknown;
+}
+
+export interface EOISubscriptionErrorMessage extends EOISubscriptionMessage {
+    message?: string;
 }
 
 export type EOISocketConnectHandler = () => void;
@@ -124,6 +195,7 @@ export type EOILiveSearchDetectionHandler = (message: EOILiveSearchDetectionMess
 export type EOICountUpdateHandler = (message: EOICountUpdateMessage) => void;
 export type EOIVideoProcessingUpdateHandler = (message: EOIVideoProcessingUpdateMessage) => void;
 export type EOISubscriptionHandler = (message: EOISubscriptionMessage) => void;
+export type EOISubscriptionErrorHandler = (message: EOISubscriptionErrorMessage) => void;
 
 export interface EOISocketEventHandlers {
     handleConnect?(): void;
@@ -137,6 +209,7 @@ export interface EOISocketEventHandlers {
     handleVideoProcessingUpdate?(message: EOIVideoProcessingUpdateMessage): void;
     handleSubscribed?(message: EOISubscriptionMessage): void;
     handleUnsubscribed?(message: EOISubscriptionMessage): void;
+    handleSubscriptionError?(message: EOISubscriptionErrorMessage): void;
 }
 
 export interface EOISocketClientOptions {
