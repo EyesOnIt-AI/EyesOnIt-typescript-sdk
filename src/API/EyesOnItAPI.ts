@@ -8,17 +8,24 @@ import { EOIUpdateLiveSearchInputs } from './inputs/eoiUpdateLiveSearchInputs';
 import { EOIMonitorStreamInputs } from './inputs/eoiMonitorStreamInputs';
 import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
+import { EOIGetVideoStatusInputs } from './inputs/eoiGetVideoStatusInputs';
 import { EOIArchiveSearchInputs } from './inputs/eoiArchiveSearchInputs';
 import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
+import { EOIStopVideoInputs } from './inputs/eoiStopVideoInputs';
 import { EOIUpdateConfigInputs } from './inputs/eoiUpdateConfigInputs';
 import { EOIValidator } from './eoiValidator';
+import { EOIValidateLicenseInputs } from './inputs/eoiValidateLicenseInputs';
 import { EOIAddStreamResponse } from './outputs/eoiAddStreamResponse';
+import { EOIGetConfigResponse } from './outputs/eoiGetConfigResponse';
 import { EOIGetAllStreamsInfoResponse } from './outputs/eoiGetAllStreamsInfoResponse';
 import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionInfoResponse';
 import { EOIGetStreamDetailsResponse } from './outputs/eoiGetStreamDetailsResponse';
 import { EOIGetSupportedClassesResponse } from './outputs/eoiGetSupportedClassesResponse';
+import { EOIGetVideoStatusResponse } from './outputs/eoiGetVideoStatusResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOIHealthResponse } from './outputs/eoiHealthResponse';
+import { EOILicenseStatusResponse } from './outputs/eoiLicenseStatusResponse';
+import { EOILicenseValidityResponse } from './outputs/eoiLicenseValidityResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
@@ -26,6 +33,7 @@ import { EOIProcessVideoResponse as EOIProcessVideoResponse } from './outputs/eo
 import { EOIRemoveStreamResponse } from './outputs/eoiRemoveStreamResponse';
 import { EOISearchResponse } from './outputs/eoiSearchResponse';
 import { EOIStopMonitoringStreamResponse } from './outputs/eoiStopMonitoringStreamResponse';
+import { EOIStopVideoResponse } from './outputs/eoiStopVideoResponse';
 import { EOIUpdateConfigResponse } from './outputs/eoiUpdateConfigResponse';
 import { EOIAxiosRESTHandler } from './REST/EOIAxiosRESTHandler';
 import { IEOIRESTHandler } from './REST/IEOIRESTHandler';
@@ -48,6 +56,8 @@ export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
     private static readonly addStreamPath = "/add_stream";
     private static readonly processVideoPath = "/process_video";
+    private static readonly stopVideoPath = "/stop_video";
+    private static readonly getVideoStatusPath = "/get_video_status";
     private static readonly removeStreamPath = "/remove_stream";
     private static readonly monitorStreamPath = "/monitor_stream";
     private static readonly stopMonitorStreamPath = "/stop_monitoring";
@@ -61,6 +71,7 @@ export class EyesOnItAPI {
     private static readonly pauseLiveSearchPath = "/pause_live_search";
     private static readonly resumeLiveSearchPath = "/resume_live_search";
     private static readonly cancelLiveSearchPath = "/cancel_live_search";
+    private static readonly getConfigPath = "/get_config";
     private static readonly updateConfigPath = "/update_config";
     private static readonly facerecGroupsPath = "/facerec_groups";
     private static readonly facerecSearchGroupNamesPath = "/facerec_search_group_names";
@@ -72,6 +83,10 @@ export class EyesOnItAPI {
     private static readonly facerecRemovePersonPath = "/facerec_remove_person";
     private static readonly facerecPersonDetails = "/facerec_person_details";
     private static readonly healthPath = "/health";
+    private static readonly isEoiAlivePath = "/is_eoi_alive";
+    private static readonly isLicenseValidPath = "/is_license_valid";
+    private static readonly getLicenseStatusPath = "/get_license_status";
+    private static readonly validateLicensePath = "/validate_license";
     
     private logger;
 
@@ -119,6 +134,94 @@ export class EyesOnItAPI {
         this.logger.debug(`${logPrefix}: ${endPoint} response: ${JSON.stringify(eoiResponse)}`);
 
         return new EOIHealthResponse(eoiResponse);
+    }
+
+    /**
+     * Checks whether the EyesOnIt API process is alive.
+     *
+     * @returns Base API response indicating liveness.
+     * @remarks Endpoint: `GET /is_eoi_alive`
+     */
+    public async isEoiAlive(): Promise<EOIBaseOutputs> {
+        const logPrefix = `${this.constructor.name}.isEoiAlive`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.isEoiAlivePath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response success: ${eoiResponse.success}`);
+
+        return new EOIBaseOutputs(eoiResponse);
+    }
+
+    /**
+     * Checks whether the configured license is valid.
+     *
+     * @returns A typed response containing entered/valid license booleans.
+     * @remarks Endpoint: `GET /is_license_valid`
+     */
+    public async isLicenseValid(): Promise<EOILicenseValidityResponse> {
+        const logPrefix = `${this.constructor.name}.isLicenseValid`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.isLicenseValidPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response success: ${eoiResponse.success}`);
+
+        return new EOILicenseValidityResponse(eoiResponse);
+    }
+
+    /**
+     * Returns the current license status.
+     *
+     * @returns A typed response containing license status fields.
+     * @remarks Endpoint: `GET /get_license_status`
+     */
+    public async getLicenseStatus(): Promise<EOILicenseStatusResponse> {
+        const logPrefix = `${this.constructor.name}.getLicenseStatus`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getLicenseStatusPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response success: ${eoiResponse.success}`);
+
+        return new EOILicenseStatusResponse(eoiResponse);
+    }
+
+    /**
+     * Validates and applies a license.
+     *
+     * @param inputs License key and validation token.
+     * @returns A typed response containing the resulting license status.
+     * @remarks Endpoint: `POST /validate_license`
+     */
+    public async validateLicense(inputs: EOIValidateLicenseInputs): Promise<EOILicenseStatusResponse> {
+        const logPrefix = `${this.constructor.name}.validateLicense`;
+        let validateLicenseResponse = new EOILicenseStatusResponse(
+            inputs == null ? new EOIResponse(false, "inputs = null. Validate license request must include inputs") : inputs.validate()
+        );
+
+        if (validateLicenseResponse.success) {
+            const endPoint = `${this.apiBasePath}${EyesOnItAPI.validateLicensePath}`;
+            const body: any = { key: inputs.key, token: inputs.token };
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                validateLicenseResponse = new EOILicenseStatusResponse(response);
+                this.logger.debug(`${logPrefix}: ${endPoint} response success: ${response.success}`);
+            } catch (error) {
+                validateLicenseResponse = new EOILicenseStatusResponse(this.handleError(error));
+            }
+        }
+
+        return validateLicenseResponse;
     }
 
 
@@ -215,6 +318,66 @@ export class EyesOnItAPI {
         }
 
         return processVideosResponse;
+    }
+
+    /**
+     * Stops one video processing job, or all active video processing jobs when no ID is provided.
+     *
+     * @param inputs Optional video identifier payload.
+     * @returns A typed response containing the stopped video identifier, when supplied.
+     * @remarks Endpoint: `POST /stop_video`
+     */
+    public async stopVideo(inputs: EOIStopVideoInputs = new EOIStopVideoInputs(null)): Promise<EOIStopVideoResponse> {
+        let logPrefix = `${this.constructor.name}.stopVideo`;
+        let stopVideoResponse = new EOIStopVideoResponse(
+            inputs == null ? new EOIResponse(false, "inputs = null. Stop video request must include inputs") : inputs.validate()
+        );
+
+        if (stopVideoResponse.success) {
+            const endPoint = `${this.apiBasePath}${EyesOnItAPI.stopVideoPath}`;
+            const body: any = inputs.video_id == null ? {} : { video_id: inputs.video_id };
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                stopVideoResponse = new EOIStopVideoResponse(response);
+            } catch (error) {
+                stopVideoResponse = new EOIStopVideoResponse(this.handleError(error));
+            }
+        }
+
+        return stopVideoResponse;
+    }
+
+    /**
+     * Returns status for one video processing job.
+     *
+     * @param inputs Video identifier payload.
+     * @returns A typed response containing the raw video status payload.
+     * @remarks Endpoint: `POST /get_video_status`
+     */
+    public async getVideoStatus(inputs: EOIGetVideoStatusInputs): Promise<EOIGetVideoStatusResponse> {
+        let logPrefix = `${this.constructor.name}.getVideoStatus`;
+        let getVideoStatusResponse = new EOIGetVideoStatusResponse(
+            inputs == null ? new EOIResponse(false, "inputs = null. Get video status request must include inputs") : inputs.validate()
+        );
+
+        if (getVideoStatusResponse.success) {
+            const endPoint = `${this.apiBasePath}${EyesOnItAPI.getVideoStatusPath}`;
+            const body: any = { video_id: inputs.video_id };
+
+            this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+            try {
+                const response = await this.doPost(endPoint, body, logPrefix);
+                getVideoStatusResponse = new EOIGetVideoStatusResponse(response);
+            } catch (error) {
+                getVideoStatusResponse = new EOIGetVideoStatusResponse(this.handleError(error));
+            }
+        }
+
+        return getVideoStatusResponse;
     }
 
     /**
@@ -577,6 +740,25 @@ export class EyesOnItAPI {
         }
 
         return cancelLiveSearchResponse;
+    }
+
+    /**
+     * Returns the current runtime configuration.
+     *
+     * @returns A typed response containing the raw configuration payload.
+     * @remarks Endpoint: `GET /get_config`
+     */
+    public async getConfig(): Promise<EOIGetConfigResponse> {
+        const logPrefix = `${this.constructor.name}.getConfig`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getConfigPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response success: ${eoiResponse.success}`);
+
+        return new EOIGetConfigResponse(eoiResponse);
     }
 
     /**
