@@ -11,6 +11,14 @@ import { EOIVMSDetectionConfig } from "./VMS/eoiVMSDetectionConfig";
  */
 export class EOIDetectionConfig {
     /**
+     * Stable identifier for this detection configuration within a region.
+     */
+    public config_id?: string | null;
+    /**
+     * User-facing label for this detection configuration.
+     */
+    public label?: string | null;
+    /**
      * Optional class filter (`person`, `vehicle`, `bag`, `animal`, `unknown`).
      */
     public class_name?: string | null;
@@ -78,6 +86,8 @@ export class EOIDetectionConfig {
         
         if (obj != null) {
             detection_config = new EOIDetectionConfig();
+            detection_config.config_id = obj.config_id;
+            detection_config.label = obj.label;
             detection_config.class_name = obj.class_name;
             detection_config.class_threshold = obj.class_threshold;
             detection_config.object_size = obj.object_size;
@@ -110,6 +120,8 @@ export class EOIDetectionConfig {
 
     public static default(): EOIDetectionConfig {
         let detection_config = new EOIDetectionConfig();
+        detection_config.config_id = null;
+        detection_config.label = null;
         detection_config.class_name = null;
         detection_config.class_threshold = null;
         detection_config.object_size = 100;
