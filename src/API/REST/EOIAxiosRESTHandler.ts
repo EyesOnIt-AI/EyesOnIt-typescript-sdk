@@ -17,8 +17,9 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
             eoiResponse = new EOIResponse(response.data.success, response.data.message);
             eoiResponse.data = response.data.data;
         }).catch(async (error: any) => {
-            this.logger.error(`EOIAxiosRESTHandler.get error: ${JSON.stringify(error.response?.data)}`);
-            console.log(`EOIAxiosRESTHandler.get error: ${JSON.stringify(error.response?.data)}`);
+            const errorDetails = this.formatAxiosError(error);
+            this.logger.error(`EOIAxiosRESTHandler.get error: ${errorDetails}`);
+            console.log(`EOIAxiosRESTHandler.get error: ${errorDetails}`);
             eoiResponse = new EOIResponse(false, error.message);
         });
 
@@ -44,8 +45,9 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
                     this.logger.warn(`EOIAxiosRESTHandler.post: stale keep-alive connection on attempt ${attempt}; retrying. ${error.message}`);
                     staleConnection = true;
                 } else {
-                    this.logger.error(`EOIAxiosRESTHandler.post error: ${JSON.stringify(error.response?.data)}`);
-                    console.log(`EOIAxiosRESTHandler.post error: ${JSON.stringify(error.response?.data)}`);
+                    const errorDetails = this.formatAxiosError(error);
+                    this.logger.error(`EOIAxiosRESTHandler.post error: ${errorDetails}`);
+                    console.log(`EOIAxiosRESTHandler.post error: ${errorDetails}`);
                     eoiResponse = new EOIResponse(false, error.message);
                 }
             });
@@ -72,6 +74,18 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
             message.toLowerCase().includes('connection was closed') ||
             message.toLowerCase().includes('socket hang up') ||
             message.toLowerCase().includes('connection closed');
+    }
+
+    private formatAxiosError(error: any): string {
+        if (error.response?.data != null) {
+            return JSON.stringify(error.response.data);
+        }
+
+        return JSON.stringify({
+            code: error.code,
+            message: error.message,
+            url: error.config?.url,
+        });
     }
 
 }
