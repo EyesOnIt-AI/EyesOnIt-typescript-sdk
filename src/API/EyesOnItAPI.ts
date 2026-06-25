@@ -10,6 +10,7 @@ import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
 import { EOIGetVideoStatusInputs } from './inputs/eoiGetVideoStatusInputs';
 import { EOIArchiveSearchInputs } from './inputs/eoiArchiveSearchInputs';
+import { EOIGetInteractionEventSummaryInputs, EOIGetInteractionEventsInputs, EOIUpdateInteractionEventStatusInputs } from './inputs/eoiInteractionEventInputs';
 import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
 import { EOIStopVideoInputs } from './inputs/eoiStopVideoInputs';
 import { EOIUpdateConfigInputs } from './inputs/eoiUpdateConfigInputs';
@@ -24,6 +25,7 @@ import { EOIGetSupportedClassesResponse } from './outputs/eoiGetSupportedClasses
 import { EOIGetVideoStatusResponse } from './outputs/eoiGetVideoStatusResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOIHealthResponse } from './outputs/eoiHealthResponse';
+import { EOIGetInteractionEventSummaryResponse, EOIGetInteractionEventsResponse, EOIUpdateInteractionEventStatusResponse } from './outputs/eoiInteractionEventResponses';
 import { EOILicenseStatusResponse } from './outputs/eoiLicenseStatusResponse';
 import { EOILicenseValidityResponse } from './outputs/eoiLicenseValidityResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
@@ -66,6 +68,9 @@ export class EyesOnItAPI {
     private static readonly getSupportedClassesPath = "/get_supported_classes";
     private static readonly getLastDetectionInfoPath = "/get_last_detection_info";
     private static readonly getVideoFramePath = "/get_video_frame";
+    private static readonly getInteractionEventsPath = "/get_interaction_events";
+    private static readonly getInteractionEventSummaryPath = "/get_interaction_event_summary";
+    private static readonly updateInteractionEventStatusPath = "/update_interaction_event_status";
     private static readonly searchLivePath = "/live_search";
     private static readonly searchArchivePath = "/archive_search";
     private static readonly pauseLiveSearchPath = "/pause_live_search";
@@ -567,6 +572,72 @@ export class EyesOnItAPI {
         }
 
         return getLastDetectionInfoResponse;
+    }
+
+    /**
+     * Returns persisted region-level interaction candidate events.
+     *
+     * @param inputs Optional stream, time, type, status, and pagination filters.
+     * @returns A typed response containing event records and total count.
+     * @remarks Endpoint: `POST /get_interaction_events`
+     */
+    public async getInteractionEvents(inputs?: EOIGetInteractionEventsInputs): Promise<EOIGetInteractionEventsResponse> {
+        const logPrefix = `${this.constructor.name}.getInteractionEvents`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getInteractionEventsPath}`;
+        const body: any = inputs ?? new EOIGetInteractionEventsInputs();
+
+        this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+        try {
+            const response = await this.doPost(endPoint, body, logPrefix);
+            return new EOIGetInteractionEventsResponse(response);
+        } catch (error) {
+            return new EOIGetInteractionEventsResponse(this.handleError(error));
+        }
+    }
+
+    /**
+     * Returns summary counts for persisted interaction candidate events.
+     *
+     * @param inputs Optional stream, time, type, and status filters.
+     * @returns A typed response containing grouped event counts.
+     * @remarks Endpoint: `POST /get_interaction_event_summary`
+     */
+    public async getInteractionEventSummary(inputs?: EOIGetInteractionEventSummaryInputs): Promise<EOIGetInteractionEventSummaryResponse> {
+        const logPrefix = `${this.constructor.name}.getInteractionEventSummary`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getInteractionEventSummaryPath}`;
+        const body: any = inputs ?? new EOIGetInteractionEventSummaryInputs();
+
+        this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+        try {
+            const response = await this.doPost(endPoint, body, logPrefix);
+            return new EOIGetInteractionEventSummaryResponse(response);
+        } catch (error) {
+            return new EOIGetInteractionEventSummaryResponse(this.handleError(error));
+        }
+    }
+
+    /**
+     * Updates review status for one persisted interaction candidate event.
+     *
+     * @param inputs Event ID, review status, and optional reviewer note.
+     * @returns A typed response containing the updated event when found.
+     * @remarks Endpoint: `POST /update_interaction_event_status`
+     */
+    public async updateInteractionEventStatus(inputs: EOIUpdateInteractionEventStatusInputs): Promise<EOIUpdateInteractionEventStatusResponse> {
+        const logPrefix = `${this.constructor.name}.updateInteractionEventStatus`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.updateInteractionEventStatusPath}`;
+        const body: any = inputs;
+
+        this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+        try {
+            const response = await this.doPost(endPoint, body, logPrefix);
+            return new EOIUpdateInteractionEventStatusResponse(response);
+        } catch (error) {
+            return new EOIUpdateInteractionEventStatusResponse(this.handleError(error));
+        }
     }
 
     /**

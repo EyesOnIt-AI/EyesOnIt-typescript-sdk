@@ -9,6 +9,7 @@ export * from "./eoiFaceRecognitionConfig";
 export * from "./eoiGpu";
 export * from "./eoiImageDetection";
 export * from "./eoiImageRecording";
+export * from "./eoiInteractionEvent";
 export * from "./eoiInteractionRule";
 export * from "./eoiLastDetectionInfo";
 export * from "./eoiLine";

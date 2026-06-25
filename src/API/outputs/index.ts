@@ -10,6 +10,7 @@ export * from "./eoiGetSupportedClassesResponse";
 export * from "./eoiGetVideoStatusResponse";
 export * from "./eoiGetVideoFrameResponse";
 export * from "./eoiHealthResponse";
+export * from "./eoiInteractionEventResponses";
 export * from "./eoiLicenseStatusResponse";
 export * from "./eoiLicenseValidityResponse";
 export * from "./eoiLiveSearchResponse";

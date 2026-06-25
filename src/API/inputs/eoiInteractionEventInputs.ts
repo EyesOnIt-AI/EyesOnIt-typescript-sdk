@@ -1,0 +1,39 @@
+import { EOIInteractionEventStatus } from "../elements/eoiInteractionEvent";
+
+export class EOIGetInteractionEventsInputs {
+    public stream_url?: string | null;
+    public start_time?: number | null;
+    public end_time?: number | null;
+    public rule_type?: string | null;
+    public status?: EOIInteractionEventStatus | null;
+    public limit?: number | null;
+    public offset?: number | null;
+
+    constructor(init?: Partial<EOIGetInteractionEventsInputs>) {
+        Object.assign(this, init);
+    }
+}
+
+export class EOIGetInteractionEventSummaryInputs {
+    public stream_url?: string | null;
+    public start_time?: number | null;
+    public end_time?: number | null;
+    public rule_type?: string | null;
+    public status?: EOIInteractionEventStatus | null;
+
+    constructor(init?: Partial<EOIGetInteractionEventSummaryInputs>) {
+        Object.assign(this, init);
+    }
+}
+
+export class EOIUpdateInteractionEventStatusInputs {
+    public event_id: string;
+    public status: EOIInteractionEventStatus;
+    public reviewer_note?: string | null;
+
+    constructor(event_id: string, status: EOIInteractionEventStatus, reviewer_note?: string | null) {
+        this.event_id = event_id;
+        this.status = status;
+        this.reviewer_note = reviewer_note;
+    }
+}

@@ -5,6 +5,7 @@ export * from "./eoiAddStreamInputs";
 export * from "./eoiArchiveSearchInputs";
 export * from "./eoiBaseInputs";
 export * from "./eoiGetVideoStatusInputs";
+export * from "./eoiInteractionEventInputs";
 export * from "./eoiLiveSearchInputs";
 export * from "./eoiMonitorStreamInputs";
 export * from "./eoiProcessImageInputs";
