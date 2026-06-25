@@ -2,10 +2,15 @@ import { EOIInteractionEventStatus } from "../elements/eoiInteractionEvent";
 
 export class EOIGetInteractionEventsInputs {
     public stream_url?: string | null;
+    public stream_name?: string | null;
+    public region_name?: string | null;
     public start_time?: number | null;
     public end_time?: number | null;
     public rule_type?: string | null;
     public status?: EOIInteractionEventStatus | null;
+    public mode?: string | null;
+    public severity?: string | null;
+    public distance_mode?: string | null;
     public limit?: number | null;
     public offset?: number | null;
 
@@ -16,10 +21,15 @@ export class EOIGetInteractionEventsInputs {
 
 export class EOIGetInteractionEventSummaryInputs {
     public stream_url?: string | null;
+    public stream_name?: string | null;
+    public region_name?: string | null;
     public start_time?: number | null;
     public end_time?: number | null;
     public rule_type?: string | null;
     public status?: EOIInteractionEventStatus | null;
+    public mode?: string | null;
+    public severity?: string | null;
+    public distance_mode?: string | null;
 
     constructor(init?: Partial<EOIGetInteractionEventSummaryInputs>) {
         Object.assign(this, init);
