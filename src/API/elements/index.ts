@@ -18,6 +18,7 @@ export * from "./eoiNotification";
 export * from "./eoiObjectDescription";
 export * from "./eoiRecording";
 export * from "./eoiRegion";
+export * from "./eoiRegionCalibration";
 export * from "./eoiSearchResult";
 export * from "./eoiSimilarityConfig";
 export * from "./eoiSimilarityDetectionObject";

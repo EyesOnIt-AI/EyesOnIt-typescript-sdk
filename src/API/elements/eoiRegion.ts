@@ -1,6 +1,7 @@
 import { EOIDetectionConfig } from "./eoiDetectionConfig";
 import { EOIInteractionRule } from "./eoiInteractionRule";
 import { EOIMotionDetection } from "./eoiMotionDetection";
+import { EOIRegionCalibration } from "./eoiRegionCalibration";
 import { EOIVertex } from "./eoiVertex";
 
 export class EOIRegion {
@@ -12,6 +13,7 @@ export class EOIRegion {
     public polygon: EOIVertex[];
     public detection_configs: EOIDetectionConfig[];
     public interaction_rules?: EOIInteractionRule[];
+    public calibration?: EOIRegionCalibration;
     public motion_detection?: EOIMotionDetection;
 
     constructor() {
@@ -37,6 +39,7 @@ export class EOIRegion {
                 .map(EOIInteractionRule.fromJsonObj)
                 .filter((interactionRule: EOIInteractionRule | undefined): interactionRule is EOIInteractionRule => interactionRule != null)
             : [];
+        region.calibration = EOIRegionCalibration.fromJsonObj(obj.calibration);
 
         region.motion_detection = EOIMotionDetection.fromJsonObj(obj.motion_detection);
 
