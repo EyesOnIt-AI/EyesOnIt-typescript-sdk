@@ -27,6 +27,22 @@ export class EOIDetectionConfig {
      */
     public class_threshold?: number | null = 10;
     /**
+     * Whether class-name/object-type detection contributes to match results.
+     */
+    public use_object_type_detection: boolean = true;
+    /**
+     * Whether natural-language prompt matching is enabled.
+     */
+    public use_natural_language: boolean = false;
+    /**
+     * Whether face-recognition matching is enabled.
+     */
+    public use_face_recognition: boolean = false;
+    /**
+     * Whether similarity matching is enabled.
+     */
+    public use_similarity_detection: boolean = false;
+    /**
      * Minimum object size filter. Minimum is `100` when provided.
      */
     public object_size?: number = 100;
@@ -90,6 +106,10 @@ export class EOIDetectionConfig {
             detection_config.label = obj.label;
             detection_config.class_name = obj.class_name;
             detection_config.class_threshold = obj.class_threshold;
+            detection_config.use_object_type_detection = obj.use_object_type_detection ?? true;
+            detection_config.use_natural_language = obj.use_natural_language ?? false;
+            detection_config.use_face_recognition = obj.use_face_recognition ?? false;
+            detection_config.use_similarity_detection = obj.use_similarity_detection ?? false;
             detection_config.object_size = obj.object_size;
             detection_config.combined_threshold = obj.combined_threshold;
             detection_config.min_contour_area = obj.min_contour_area;
@@ -124,6 +144,10 @@ export class EOIDetectionConfig {
         detection_config.label = null;
         detection_config.class_name = null;
         detection_config.class_threshold = null;
+        detection_config.use_object_type_detection = true;
+        detection_config.use_natural_language = false;
+        detection_config.use_face_recognition = false;
+        detection_config.use_similarity_detection = false;
         detection_config.object_size = 100;
         detection_config.combined_threshold = null;
         detection_config.min_contour_area = null;

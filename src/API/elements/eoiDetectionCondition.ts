@@ -36,8 +36,9 @@ export class EOIDetectionCondition {
             for (const obj of this.objects) {
                 let confidence = 0;
                 let description: string | null | undefined;
+                const detectionType = Array.isArray(obj.detection_types) ? obj.detection_types[0] : undefined;
 
-                switch (obj.detection_type) {
+                switch (detectionType) {
                     case "class_name":
                         confidence = obj.class_confidence || 0;
                         description = obj.class_name || "";

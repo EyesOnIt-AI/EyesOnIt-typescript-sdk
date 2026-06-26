@@ -6,14 +6,13 @@ import { EOISimilarityDetectionObject } from "./eoiSimilarityDetectionObject";
 export class EOIDetectionObject {
     constructor(
         public object_descriptions: EOIObjectDescription[] = [],
-        public detection_type: string | null = null,
+        public detection_types: string[] = [],
         public class_confidence: number | null = null,
         public class_name?: string | null,
         public bounds?: EOIBoundingBox,
         public image?: string | null,
         public face?: EOIFaceDetectionObject,
-        public similarity?: EOISimilarityDetectionObject,
-        public detection_types?: string[] | null) { }
+        public similarity?: EOISimilarityDetectionObject) { }
         
     public static fromJsonObj(obj: any) {
         let object_descriptions: EOIObjectDescription[] = [];
@@ -34,14 +33,13 @@ export class EOIDetectionObject {
 
         return new EOIDetectionObject(
             object_descriptions,
-            obj.detection_type,
+            Array.isArray(obj.detection_types) ? obj.detection_types : [],
             obj.class_confidence,
             obj.class_name,
             EOIBoundingBox.fromJsonObj(obj.bounds),
             obj.image,
             EOIFaceDetectionObject.fromJsonObj(obj.face),
-            EOISimilarityDetectionObject.fromJsonObj(obj.similarity),
-            obj.detection_types
+            EOISimilarityDetectionObject.fromJsonObj(obj.similarity)
         );
     }
 
