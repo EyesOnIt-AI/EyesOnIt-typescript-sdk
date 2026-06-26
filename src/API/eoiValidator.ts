@@ -131,12 +131,13 @@ export class EOIValidator {
         }
 
         if (response.success) {
+            const startTimeProvided = inputs.video_start_local_time != null;
             const startTimeTrimmed = inputs.video_start_local_time == null ? null : inputs.video_start_local_time.trim();
 
-            if (startTimeTrimmed == null || startTimeTrimmed.length === 0) {
-                response = new EOIResponse(false, `video_start_local_time must be provided. video_start_local_time = ${startTimeTrimmed}`);
+            if (startTimeProvided && (startTimeTrimmed == null || startTimeTrimmed.length === 0)) {
+                response = new EOIResponse(false, `video_start_local_time must be a valid time when provided. video_start_local_time = ${startTimeTrimmed}`);
             }
-            else if (isNaN(Date.parse(startTimeTrimmed))) {
+            else if (startTimeTrimmed != null && isNaN(Date.parse(startTimeTrimmed))) {
                 response = new EOIResponse(false, `video_start_local_time must be a valid time. video_start_local_time = ${startTimeTrimmed}`);
             }
         }

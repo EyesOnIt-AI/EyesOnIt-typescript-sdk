@@ -26,7 +26,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
      * @param output_all_frames Whether all frames should be written to output.
      * @param effects Optional visual effects/overlays configuration.
      * @param recording Optional recording configuration.
-     * @param video_start_local_time Start time in ISO date-time format.
+     * @param video_start_local_time Optional start time in ISO date-time format.
      * @param start_seconds Optional trim start offset in seconds.
      * @param end_seconds Optional trim end offset in seconds.
      * @param mode Processing mode. Default: `KNOWN_OBJECT_DETECTION`.
@@ -49,7 +49,7 @@ export class EOIProcessVideoInputs extends EOIBaseInputs {
         public output_all_frames: boolean = true,
         public effects: EOIEffects | undefined,
         public recording: EOIRecording | undefined,
-        public video_start_local_time: string,
+        public video_start_local_time: string | null | undefined = undefined,
         public start_seconds: number,
         public end_seconds: number,
         public mode: string = "KNOWN_OBJECT_DETECTION",
