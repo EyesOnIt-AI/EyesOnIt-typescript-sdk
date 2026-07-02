@@ -2,6 +2,7 @@ import { EOILine } from "./eoiLine";
 import { EOINotification } from "./eoiNotification";
 import { EOIRecording } from "./eoiRecording";
 import { EOIRegion } from "./eoiRegion";
+import { EOICameraCalibration } from "./eoiCameraCalibration";
 
 export class EOIStreamInfo {
     public stream_url: string;
@@ -13,6 +14,7 @@ export class EOIStreamInfo {
     public status: string;
     public regions: EOIRegion[];
     public lines: EOILine[];
+    public calibration: EOICameraCalibration | undefined;
     public notification: EOINotification | undefined;
     public recording: EOIRecording | undefined;
 
@@ -34,6 +36,7 @@ export class EOIStreamInfo {
 
         this.regions = obj.regions != null ? obj.regions.map(EOIRegion.fromJsonObj) : [];
         this.lines = obj.lines != null ? obj.lines.map(EOILine.fromJsonObj) : [];
+        this.calibration = EOICameraCalibration.fromJsonObj(obj.calibration);
         this.notification = EOINotification.fromJsonObj(obj.notification);
         this.recording = EOIRecording.fromJsonObj(obj.recording);
     }

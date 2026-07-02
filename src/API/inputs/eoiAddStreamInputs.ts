@@ -6,6 +6,7 @@ import { EOIValidator } from "../eoiValidator";
 import { EOIRecording } from "../elements/eoiRecording";
 import { EOIEffects } from "../elements/eoiEffects";
 import { EOILine } from "../elements/eoiLine";
+import { EOICameraCalibration } from "../elements/eoiCameraCalibration";
 
 /**
  * Request payload for registering a stream and its monitoring configuration.
@@ -24,6 +25,7 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
      * @param notification Optional notification settings (for example phone alerting).
      * @param recording Optional recording settings.
      * @param effects Optional visual effect overlays for output frames.
+     * @param calibration Optional camera-level floor-plane calibration.
      */
     constructor(
         public stream_url: string, 
@@ -37,7 +39,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
         public lines: EOILine[] | undefined,
         public notification: EOINotification | undefined,
         public recording: EOIRecording | undefined,
-        public effects: EOIEffects | undefined) {
+        public effects: EOIEffects | undefined,
+        public calibration?: EOICameraCalibration | undefined) {
         super(regions);
     }
 
@@ -53,7 +56,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
             obj.lines?.map(EOILine.fromJsonObj),
             EOINotification.fromJsonObj(obj.notification),
             EOIRecording.fromJsonObj(obj.recording),
-            EOIEffects.fromJsonObj(obj.effects));
+            EOIEffects.fromJsonObj(obj.effects),
+            EOICameraCalibration.fromJsonObj(obj.calibration));
 
         return EOIValidator.validateAddStreamInputs(inputs).success ? inputs : null;
     }
