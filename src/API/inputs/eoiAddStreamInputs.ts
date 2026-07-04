@@ -7,11 +7,14 @@ import { EOIRecording } from "../elements/eoiRecording";
 import { EOIEffects } from "../elements/eoiEffects";
 import { EOILine } from "../elements/eoiLine";
 import { EOICameraCalibration } from "../elements/eoiCameraCalibration";
+import { EOI_CURRENT_SCHEMA_VERSION, EOISchemaVersion } from "../eoiSchemaVersion";
 
 /**
  * Request payload for registering a stream and its monitoring configuration.
  */
 export class EOIAddStreamInputs extends EOIBaseInputs {
+    public schema_version: EOISchemaVersion = EOI_CURRENT_SCHEMA_VERSION;
+
     /**
      * @param stream_url RTSP URL for the stream.
      * @param name Stream display name. Minimum length: 3.
@@ -58,8 +61,13 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
             EOIRecording.fromJsonObj(obj.recording),
             EOIEffects.fromJsonObj(obj.effects),
             EOICameraCalibration.fromJsonObj(obj.calibration));
+        inputs.schema_version = obj.schema_version ?? EOI_CURRENT_SCHEMA_VERSION;
 
         return EOIValidator.validateAddStreamInputs(inputs).success ? inputs : null;
+    }
+
+    public toRequestBody(): any {
+        return JSON.parse(this.stringify());
     }
 
     /**
@@ -72,6 +80,8 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
 
     private stringifyFilter(key: string, value: any) {
         if (key == "confidence") return undefined;
+        else if (key == "conditions") return undefined;
+        else if (key == "interaction_rules") return undefined;
         else return value;
     }
 

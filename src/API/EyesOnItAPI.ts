@@ -47,6 +47,7 @@ import { EOIRemoveFacerecGroupResponse } from './outputs/eoiRemoveFacerecGroupRe
 import { EOIAddFacerecPersonInputs } from './inputs/eoiAddFacerecPersonInputs';
 import { EOIFacerecPersonDetailsResponse } from './outputs/eoiFacerecPersonDetailsResponse';
 import { EOIAddFacerecPeopleInputs } from './inputs/eoiAddFacerecPeopleInputs';
+import { EOI_CURRENT_SCHEMA_VERSION } from './eoiSchemaVersion';
 
 /**
  * Client for the EyesOnIt REST API.
@@ -281,7 +282,7 @@ export class EyesOnItAPI {
         if (addStreamResponse.success) {
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.addStreamPath}`;
 
-            const body: any = inputs;
+            const body: any = inputs.toRequestBody();
 
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
@@ -399,7 +400,7 @@ export class EyesOnItAPI {
             const logPrefix = `${this.constructor.name}.removeStream`;
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.removeStreamPath}`;
 
-            const body: any = { stream_url: streamUrl };
+            const body: any = { stream_url: streamUrl, schema_version: EOI_CURRENT_SCHEMA_VERSION };
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
             try {

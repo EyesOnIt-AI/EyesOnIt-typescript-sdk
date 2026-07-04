@@ -1,6 +1,5 @@
 export type EOIInteractionRuleType =
     | "co_presence"
-    | "zone_violation"
     | "close_approach"
     | "collision_course_candidate";
 

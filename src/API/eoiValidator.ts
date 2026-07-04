@@ -23,6 +23,7 @@ import { EOIAddFacerecPeopleInputs } from "./inputs/eoiAddFacerecPeopleInputs";
 import { EOIFaceRecognitionConfig } from "./elements/eoiFaceRecognitionConfig";
 import { EOISimilarityConfig } from "./elements/eoiSimilarityConfig";
 import { EOISimilarityImage } from "./elements/eoiSimilarityImage";
+import { EOIRule } from "./elements/eoiRule";
 
 export class EOIValidator {
     private static MAX_PHONE_NUMBER_LENGTH = 20;
@@ -45,6 +46,8 @@ export class EOIValidator {
     private static MIN_LINE_VERTEX_COUNT = 2;
     private static COUNT_CONDITION_TYPES = ["count_equals", "count_greater_than", "count_less_than"];
     private static LINE_CROSS_CONDITION_TYPES = ["line_cross"];
+    private static RULE_ACTION_TYPES = ["alert", "record_event", "record_metric", "record_frame", "record_video", "create_evidence"];
+    private static COUNT_RULE_OPERATORS = [">", "gt", "greater", "greater_than", "count_greater_than", "<", "lt", "less", "less_than", "count_less_than", "=", "==", "eq", "equals", "equal", "count_equals"];
     private static MIN_SEARCH_DATE_ISO = "2020-01-01T00:00:00Z";
     private static MIN_SEARCH_DATE = new Date(EOIValidator.MIN_SEARCH_DATE_ISO);
     private static MIN_FACEREC_GROUP_NAME_LENGTH = 2;
@@ -342,6 +345,10 @@ export class EOIValidator {
                     response = this.validateDetectionConfigs(region.detection_configs, lines, validateForVideo);
                 }
 
+                if (response.success && validateForVideo) {
+                    response = this.validateRules(region.rules, region.detection_configs, lines);
+                }
+
                 let name = region.name == null ? "" : region.name.trim();
 
                 if (name.length < EOIValidator.MIN_REGION_NAME_LENGTH) {
@@ -357,6 +364,180 @@ export class EOIValidator {
         }
 
         return response;
+    }
+
+    public static validateRules(rules: EOIRule[] | undefined, detectionConfigs: EOIDetectionConfig[], lines?: EOILine[]): EOIResponse {
+        let response = EOIResponse.success();
+
+        if (rules == null || rules.length === 0) {
+            return response;
+        }
+
+        const detectionConfigIds = EOIValidator.getDetectionConfigIds(detectionConfigs);
+
+        for (const rule of rules) {
+            if (!response.success) {
+                break;
+            }
+
+            const condition = rule?.condition;
+            const conditionType = condition?.type == null ? "" : String(condition.type).trim().toLowerCase();
+
+            if (condition == null) {
+                response = new EOIResponse(false, "Rule condition must be specified");
+            }
+            else if (conditionType.length === 0) {
+                response = new EOIResponse(false, "Rule condition type must be specified");
+            }
+            else {
+                response = this.validateRuleActions(rule);
+            }
+
+            if (response.success) {
+                response = this.validateRuleTiming(rule);
+            }
+
+            if (response.success && conditionType === "count") {
+                response = this.validateCountRule(rule, detectionConfigIds);
+            }
+            else if (response.success && conditionType === "line_cross") {
+                response = this.validateLineCrossRule(rule, detectionConfigIds, lines);
+            }
+            else if (response.success && conditionType.startsWith("interaction.")) {
+                response = this.validateInteractionRule(rule, detectionConfigIds);
+            }
+            else if (response.success) {
+                response = new EOIResponse(false, `Unsupported rule condition type: ${conditionType}`);
+            }
+        }
+
+        return response;
+    }
+
+    private static validateRuleActions(rule: EOIRule): EOIResponse {
+        const actions = rule.actions ?? [];
+
+        if (actions.length === 0) {
+            return new EOIResponse(false, "Rule actions must include at least one action");
+        }
+
+        for (const action of actions) {
+            const actionType = action?.type == null ? "" : String(action.type).trim().toLowerCase();
+            if (!EOIValidator.RULE_ACTION_TYPES.includes(actionType)) {
+                return new EOIResponse(false, `Unsupported rule action type: ${actionType}`);
+            }
+            if (action.pre_roll_seconds != null && action.pre_roll_seconds < 0) {
+                return new EOIResponse(false, "Rule action pre_roll_seconds must be zero or greater");
+            }
+            if (action.post_roll_seconds != null && action.post_roll_seconds < 0) {
+                return new EOIResponse(false, "Rule action post_roll_seconds must be zero or greater");
+            }
+        }
+
+        return EOIResponse.success();
+    }
+
+    private static validateRuleTiming(rule: EOIRule): EOIResponse {
+        const dwellSeconds = rule.dwell_seconds ?? rule.condition?.dwell_seconds;
+        const resetSeconds = rule.reset_seconds ?? rule.condition?.reset_seconds;
+
+        if (dwellSeconds != null && dwellSeconds < EOIValidator.MIN_ALERT_SECONDS) {
+            return new EOIResponse(false, `Rule dwell_seconds must be at least ${EOIValidator.MIN_ALERT_SECONDS}. dwell_seconds = ${dwellSeconds}`);
+        }
+        if (resetSeconds != null && resetSeconds < EOIValidator.MIN_RESET_SECONDS) {
+            return new EOIResponse(false, `Rule reset_seconds must be at least ${EOIValidator.MIN_RESET_SECONDS}. reset_seconds = ${resetSeconds}`);
+        }
+
+        return EOIResponse.success();
+    }
+
+    private static validateCountRule(rule: EOIRule, detectionConfigIds: Set<string>): EOIResponse {
+        const configId = rule.condition.detectionConfigId();
+        if (!EOIValidator.isKnownDetectionConfigId(configId, detectionConfigIds)) {
+            return new EOIResponse(false, `Count rule references unknown detection config: ${configId}`);
+        }
+
+        const operator = rule.condition.operator == null ? "greater_than" : String(rule.condition.operator).trim().toLowerCase();
+        if (!EOIValidator.COUNT_RULE_OPERATORS.includes(operator)) {
+            return new EOIResponse(false, `Unsupported count rule operator: ${operator}`);
+        }
+
+        const count = rule.condition.count ?? rule.condition.value;
+        if (count == null || count < 0) {
+            return new EOIResponse(false, "Count rule condition must include a count of at least 0");
+        }
+
+        if (!EOIValidator.ruleHasAction(rule, "alert")) {
+            return new EOIResponse(false, "Count rules currently require an alert action");
+        }
+
+        return EOIResponse.success();
+    }
+
+    private static validateLineCrossRule(rule: EOIRule, detectionConfigIds: Set<string>, lines?: EOILine[]): EOIResponse {
+        const configId = rule.condition.detectionConfigId();
+        if (!EOIValidator.isKnownDetectionConfigId(configId, detectionConfigIds)) {
+            return new EOIResponse(false, `Line-cross rule references unknown detection config: ${configId}`);
+        }
+
+        const lineName = rule.condition.line_name == null ? "" : String(rule.condition.line_name);
+        if (lineName.length === 0) {
+            return new EOIResponse(false, "Line-cross rule condition must include line_name");
+        }
+
+        const alertDirection = rule.condition.alert_direction == null ? "" : String(rule.condition.alert_direction).trim().toLowerCase();
+        if (!["positive", "negative"].includes(alertDirection)) {
+            return new EOIResponse(false, "Line-cross rule condition alert_direction must be positive or negative");
+        }
+
+        const lineNameSet = new Set<string>((lines ?? []).map((line) => line.name));
+        if (lineNameSet.size > 0 && !lineNameSet.has(lineName)) {
+            return new EOIResponse(false, `The line_name for line-cross rules must match a line name defined in the lines array. line_name = ${lineName}`);
+        }
+
+        if (!EOIValidator.ruleHasAction(rule, "alert")) {
+            return new EOIResponse(false, "Line-cross rules currently require an alert action");
+        }
+
+        return EOIResponse.success();
+    }
+
+    private static validateInteractionRule(rule: EOIRule, detectionConfigIds: Set<string>): EOIResponse {
+        const primaryConfigId = rule.condition.primary_config_id ?? rule.condition.source_config_id ?? rule.condition.detection_config_id;
+        if (!EOIValidator.isKnownDetectionConfigId(primaryConfigId, detectionConfigIds)) {
+            return new EOIResponse(false, `Interaction rule references unknown primary detection config: ${primaryConfigId}`);
+        }
+
+        const secondaryConfigId = rule.condition.secondary_config_id;
+        if (secondaryConfigId != null && String(secondaryConfigId).trim().length > 0 && !EOIValidator.isKnownDetectionConfigId(secondaryConfigId, detectionConfigIds)) {
+            return new EOIResponse(false, `Interaction rule references unknown secondary detection config: ${secondaryConfigId}`);
+        }
+
+        return EOIResponse.success();
+    }
+
+    private static getDetectionConfigIds(detectionConfigs: EOIDetectionConfig[] | undefined): Set<string> {
+        const ids = new Set<string>();
+
+        (detectionConfigs ?? []).forEach((detectionConfig, index) => {
+            const configId = detectionConfig.config_id == null ? "" : String(detectionConfig.config_id).trim();
+            if (configId.length > 0) {
+                ids.add(configId);
+            }
+            ids.add(`dc_${index + 1}`);
+            ids.add(String(index));
+        });
+
+        return ids;
+    }
+
+    private static isKnownDetectionConfigId(configId: string | null | undefined, detectionConfigIds: Set<string>): boolean {
+        const normalized = configId == null ? "" : String(configId).trim();
+        return normalized.length > 0 && detectionConfigIds.has(normalized);
+    }
+
+    private static ruleHasAction(rule: EOIRule, actionType: string): boolean {
+        return (rule.actions ?? []).some((action) => String(action?.type ?? "").trim().toLowerCase() === actionType);
     }
 
     public static validateDetectionConfigs(detection_configs: EOIDetectionConfig[], lines: EOILine[] | undefined, validateForVideo: boolean): EOIResponse {

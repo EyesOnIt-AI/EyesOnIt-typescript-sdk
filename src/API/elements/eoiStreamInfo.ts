@@ -5,6 +5,7 @@ import { EOIRegion } from "./eoiRegion";
 import { EOICameraCalibration } from "./eoiCameraCalibration";
 
 export class EOIStreamInfo {
+    public schema_version?: string;
     public stream_url: string;
     public stream_id: string;
     public name: string;
@@ -26,6 +27,7 @@ export class EOIStreamInfo {
     }
 
     public initFromJson(obj: any) {
+        this.schema_version = obj.schema_version;
         this.stream_url = obj.stream_url;
         this.stream_id = obj.stream_id;
         this.name = obj.name;
