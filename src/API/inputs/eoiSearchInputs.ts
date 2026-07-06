@@ -40,9 +40,9 @@ export class EOISearchInputs {
      */
     public similarity: EOISimilarityConfig | undefined = undefined;
     /**
-     * Optional list of stream URLs to constrain search scope.
+     * Optional list of stream IDs to constrain search scope.
      */
-    public stream_list: string[] | undefined;
+    public stream_ids: string[] | undefined;
 
     constructor() {
 
@@ -61,6 +61,6 @@ export class EOISearchInputs {
         this.face_person_id = obj.face_person_id;
         this.face_group_id = obj.face_group_id;
         this.alert_threshold = obj.threshold;
-        this.stream_list = obj.stream_list;
+        this.stream_ids = obj.stream_ids;
     }
 }

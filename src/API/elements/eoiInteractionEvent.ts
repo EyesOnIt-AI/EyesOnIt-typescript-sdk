@@ -2,6 +2,7 @@ export type EOIInteractionEventStatus = "New" | "Confirmed" | "Dismissed" | "Nee
 
 export class EOIInteractionEvent {
     public event_id: string;
+    public stream_id: string;
     public stream_url: string;
     public stream_name?: string | null;
     public region_name?: string | null;
@@ -39,6 +40,7 @@ export class EOIInteractionEvent {
 
         return new EOIInteractionEvent({
             event_id: obj.event_id,
+            stream_id: obj.stream_id,
             stream_url: obj.stream_url,
             stream_name: obj.stream_name,
             region_name: obj.region_name,

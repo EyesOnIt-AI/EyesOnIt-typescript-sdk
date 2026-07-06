@@ -14,6 +14,7 @@ import { EOI_CURRENT_SCHEMA_VERSION, EOISchemaVersion } from "../eoiSchemaVersio
  */
 export class EOIAddStreamInputs extends EOIBaseInputs {
     public schema_version: EOISchemaVersion = EOI_CURRENT_SCHEMA_VERSION;
+    public stream_id: string | undefined;
 
     /**
      * @param stream_url RTSP URL for the stream.
@@ -62,6 +63,7 @@ export class EOIAddStreamInputs extends EOIBaseInputs {
             EOIEffects.fromJsonObj(obj.effects),
             EOICameraCalibration.fromJsonObj(obj.calibration));
         inputs.schema_version = obj.schema_version ?? EOI_CURRENT_SCHEMA_VERSION;
+        inputs.stream_id = obj.stream_id;
 
         return EOIValidator.validateAddStreamInputs(inputs).success ? inputs : null;
     }

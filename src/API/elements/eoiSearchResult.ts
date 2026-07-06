@@ -4,6 +4,7 @@ export class EOISearchResult {
     public source_type: string
     public folder: string;
     public file: string;
+    public stream_id: string;
     public stream: string;
     public stream_name: string;
     public region: string;
@@ -24,6 +25,7 @@ export class EOISearchResult {
         result.source_type = obj.source_type;
         result.folder = obj.folder;
         result.file = obj.file;
+        result.stream_id = obj.stream_id;
         result.stream = obj.stream_url;
         result.stream_name = obj.stream_name;
         result.region = obj.region;

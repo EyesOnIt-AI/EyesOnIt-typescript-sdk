@@ -9,11 +9,11 @@ export class EOIAPIUtils {
     this.logger = customLogger || new Logger();
   }
 
-  public static getInfoForStream(streamsInfos: EOIStreamInfo[], streamUrl: string): EOIStreamInfo | null {
+  public static getInfoForStream(streamsInfos: EOIStreamInfo[], streamId: string): EOIStreamInfo | null {
     let requestedStreamInfo: EOIStreamInfo | null = null;
 
     for (let streamInfo of streamsInfos) {
-      if (streamInfo.stream_url == streamUrl) {
+      if (streamInfo.stream_id == streamId) {
         requestedStreamInfo = streamInfo;
         break;
       }

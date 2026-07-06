@@ -1,8 +1,7 @@
 import { EOIInteractionEventStatus } from "../elements/eoiInteractionEvent";
 
 export class EOIGetInteractionEventsInputs {
-    public stream_url?: string | null;
-    public stream_name?: string | null;
+    public stream_id?: string | null;
     public region_name?: string | null;
     public start_time?: number | null;
     public end_time?: number | null;
@@ -20,8 +19,7 @@ export class EOIGetInteractionEventsInputs {
 }
 
 export class EOIGetInteractionEventSummaryInputs {
-    public stream_url?: string | null;
-    public stream_name?: string | null;
+    public stream_id?: string | null;
     public region_name?: string | null;
     public start_time?: number | null;
     public end_time?: number | null;
@@ -32,6 +30,28 @@ export class EOIGetInteractionEventSummaryInputs {
     public distance_mode?: string | null;
 
     constructor(init?: Partial<EOIGetInteractionEventSummaryInputs>) {
+        Object.assign(this, init);
+    }
+}
+
+export type EOIInteractionHeatmapPreferredCoordinateSpace = "camera" | "world";
+
+export class EOIGetInteractionHeatmapInputs {
+    public stream_id?: string | null;
+    public region_name?: string | null;
+    public start_time?: number | null;
+    public end_time?: number | null;
+    public rule_type?: string | null;
+    public status?: EOIInteractionEventStatus | null;
+    public mode?: string | null;
+    public severity?: string | null;
+    public distance_mode?: string | null;
+    public preferred_coordinate_space?: EOIInteractionHeatmapPreferredCoordinateSpace | null = "camera";
+    public bin_count_x?: number | null = 64;
+    public bin_count_y?: number | null = 36;
+    public limit?: number | null = 10000;
+
+    constructor(init?: Partial<EOIGetInteractionHeatmapInputs>) {
         Object.assign(this, init);
     }
 }

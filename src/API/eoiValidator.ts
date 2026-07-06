@@ -79,6 +79,10 @@ export class EOIValidator {
             response = this.validateStreamUrl(inputs.stream_url);
         }
 
+        if (response.success && inputs.stream_id != null) {
+            response = this.validateStreamId(inputs.stream_id);
+        }
+
         if (response.success) {
             response = this.validateLines(inputs.lines);
         }
@@ -108,7 +112,7 @@ export class EOIValidator {
             : EOIResponse.success();
 
         if (response.success) {
-            response = this.validateStreamUrl(inputs.streamUrl);
+            response = this.validateStreamId(inputs.streamId);
         }
 
         if (response.success) {
@@ -753,6 +757,14 @@ export class EOIValidator {
         return trimmedUrl != null && trimmedUrl.length > 0 ?
             EOIResponse.success()
             : new EOIResponse(false, "The stream url must be a valid RTSP URL");
+    }
+
+    public static validateStreamId(stream_id: string): EOIResponse {
+        const trimmedId = stream_id == null ? null : stream_id.trim();
+
+        return trimmedId != null && trimmedId.length > 0 ?
+            EOIResponse.success()
+            : new EOIResponse(false, "The stream id must not be null or empty");
     }
 
     public static validatePhoneNumber(phone_number: string | null): EOIResponse {

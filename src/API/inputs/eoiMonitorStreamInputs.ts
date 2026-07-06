@@ -6,10 +6,10 @@ import { EOIValidator } from "../eoiValidator";
  */
 export class EOIMonitorStreamInputs {
     /**
-     * @param streamUrl RTSP stream URL to monitor.
+     * @param streamId Existing stream identifier to monitor.
      * @param durationSeconds Optional duration in seconds. Use `null` for no explicit timeout.
      */
-    constructor(public streamUrl: string, public durationSeconds: number | null) {
+    constructor(public streamId: string, public durationSeconds: number | null) {
     }
 
     /**

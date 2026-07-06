@@ -10,7 +10,7 @@ import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
 import { EOIGetVideoStatusInputs } from './inputs/eoiGetVideoStatusInputs';
 import { EOIArchiveSearchInputs } from './inputs/eoiArchiveSearchInputs';
-import { EOIGetInteractionEventSummaryInputs, EOIGetInteractionEventsInputs, EOIUpdateInteractionEventStatusInputs } from './inputs/eoiInteractionEventInputs';
+import { EOIGetInteractionEventSummaryInputs, EOIGetInteractionEventsInputs, EOIGetInteractionHeatmapInputs, EOIUpdateInteractionEventStatusInputs } from './inputs/eoiInteractionEventInputs';
 import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
 import { EOIStopVideoInputs } from './inputs/eoiStopVideoInputs';
 import { EOIUpdateConfigInputs } from './inputs/eoiUpdateConfigInputs';
@@ -25,7 +25,7 @@ import { EOIGetSupportedClassesResponse } from './outputs/eoiGetSupportedClasses
 import { EOIGetVideoStatusResponse } from './outputs/eoiGetVideoStatusResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOIHealthResponse } from './outputs/eoiHealthResponse';
-import { EOIGetInteractionEventSummaryResponse, EOIGetInteractionEventsResponse, EOIUpdateInteractionEventStatusResponse } from './outputs/eoiInteractionEventResponses';
+import { EOIGetInteractionEventSummaryResponse, EOIGetInteractionEventsResponse, EOIGetInteractionHeatmapResponse, EOIUpdateInteractionEventStatusResponse } from './outputs/eoiInteractionEventResponses';
 import { EOILicenseStatusResponse } from './outputs/eoiLicenseStatusResponse';
 import { EOILicenseValidityResponse } from './outputs/eoiLicenseValidityResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
@@ -47,7 +47,6 @@ import { EOIRemoveFacerecGroupResponse } from './outputs/eoiRemoveFacerecGroupRe
 import { EOIAddFacerecPersonInputs } from './inputs/eoiAddFacerecPersonInputs';
 import { EOIFacerecPersonDetailsResponse } from './outputs/eoiFacerecPersonDetailsResponse';
 import { EOIAddFacerecPeopleInputs } from './inputs/eoiAddFacerecPeopleInputs';
-import { EOI_CURRENT_SCHEMA_VERSION } from './eoiSchemaVersion';
 
 /**
  * Client for the EyesOnIt REST API.
@@ -71,6 +70,7 @@ export class EyesOnItAPI {
     private static readonly getVideoFramePath = "/get_video_frame";
     private static readonly getInteractionEventsPath = "/get_interaction_events";
     private static readonly getInteractionEventSummaryPath = "/get_interaction_event_summary";
+    private static readonly getInteractionHeatmapPath = "/get_interaction_heatmap";
     private static readonly updateInteractionEventStatusPath = "/update_interaction_event_status";
     private static readonly searchLivePath = "/live_search";
     private static readonly searchArchivePath = "/archive_search";
@@ -389,18 +389,18 @@ export class EyesOnItAPI {
     /**
      * Removes a previously registered stream.
      *
-     * @param streamUrl RTSP stream URL to remove.
+     * @param streamId Existing stream identifier to remove.
      * @returns A typed response indicating whether the stream was removed.
      * @remarks Endpoint: `POST /remove_stream`
      */
-    public async removeStream(streamUrl: string): Promise<EOIRemoveStreamResponse> {
-        let removeStreamResponse: EOIRemoveStreamResponse = new EOIRemoveStreamResponse(EOIValidator.validateStreamUrl(streamUrl));
+    public async removeStream(streamId: string): Promise<EOIRemoveStreamResponse> {
+        let removeStreamResponse: EOIRemoveStreamResponse = new EOIRemoveStreamResponse(EOIValidator.validateStreamId(streamId));
 
         if (removeStreamResponse.success) {
             const logPrefix = `${this.constructor.name}.removeStream`;
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.removeStreamPath}`;
 
-            const body: any = { stream_url: streamUrl, schema_version: EOI_CURRENT_SCHEMA_VERSION };
+            const body: any = { stream_id: streamId };
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
             try {
@@ -428,7 +428,7 @@ export class EyesOnItAPI {
             const logPrefix = `${this.constructor.name}.monitorStream`;
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.monitorStreamPath}`;
 
-            const body: any = { "stream_url": inputs.streamUrl };
+            const body: any = { "stream_id": inputs.streamId };
 
             if (inputs.durationSeconds != null) {
                 body.duration_seconds = inputs.durationSeconds;
@@ -450,18 +450,18 @@ export class EyesOnItAPI {
     /**
      * Stops active monitoring for a stream.
      *
-     * @param streamUrl RTSP stream URL to stop monitoring.
+     * @param streamId Existing stream identifier to stop monitoring.
      * @returns A typed response indicating whether monitoring stopped.
      * @remarks Endpoint: `POST /stop_monitoring`
      */
-    public async stopMonitoringStream(streamUrl: string): Promise<EOIStopMonitoringStreamResponse> {
-        let stopMonitorStreamResponse = new EOIStopMonitoringStreamResponse(EOIValidator.validateStreamUrl(streamUrl));
+    public async stopMonitoringStream(streamId: string): Promise<EOIStopMonitoringStreamResponse> {
+        let stopMonitorStreamResponse = new EOIStopMonitoringStreamResponse(EOIValidator.validateStreamId(streamId));
 
         if (stopMonitorStreamResponse.success) {
             const logPrefix = `${this.constructor.name}.stopMonitoringStream`;
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.stopMonitorStreamPath}`;
 
-            const body: any = { stream_url: streamUrl };
+            const body: any = { stream_id: streamId };
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
             try {
@@ -502,18 +502,18 @@ export class EyesOnItAPI {
     /**
      * Returns detailed status and configuration for a single stream.
      *
-     * @param streamUrl RTSP stream URL to query.
+     * @param streamId Existing stream identifier to query.
      * @returns A typed response with detailed stream information.
      * @remarks Endpoint: `POST /get_stream_details`
      */
-    public async getStreamDetails(streamUrl: string): Promise<EOIGetStreamDetailsResponse> {
-        let eoiGetStreamDetailsResponse = new EOIGetStreamDetailsResponse(EOIValidator.validateStreamUrl(streamUrl));
+    public async getStreamDetails(streamId: string): Promise<EOIGetStreamDetailsResponse> {
+        let eoiGetStreamDetailsResponse = new EOIGetStreamDetailsResponse(EOIValidator.validateStreamId(streamId));
 
         if (eoiGetStreamDetailsResponse.success) {
             const logPrefix = `${this.constructor.name}.getStreamDetails`;
             const endPoint = `${this.apiBasePath}${EyesOnItAPI.getStreamDetailsPath}`;
 
-            const body: any = { stream_url: streamUrl };
+            const body: any = { stream_id: streamId };
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
             const response = await this.doPost(endPoint, body, logPrefix);
@@ -550,18 +550,18 @@ export class EyesOnItAPI {
     /**
      * Returns the most recent detection information for a stream.
      *
-     * @param streamUrl RTSP stream URL to query.
+     * @param streamId Existing stream identifier to query.
      * @returns A typed response with the latest detection payload.
      * @remarks Endpoint: `POST /get_last_detection_info`
      */
-    public async getLastDetectionInfo(streamUrl: string): Promise<EOIGetLastDetectionInfoResponse> {
-        let getLastDetectionInfoResponse = new EOIGetLastDetectionInfoResponse(EOIValidator.validateStreamUrl(streamUrl));
+    public async getLastDetectionInfo(streamId: string): Promise<EOIGetLastDetectionInfoResponse> {
+        let getLastDetectionInfoResponse = new EOIGetLastDetectionInfoResponse(EOIValidator.validateStreamId(streamId));
 
         if (getLastDetectionInfoResponse.success) {
             const logPrefix = `${this.constructor.name}.getLastDetectionInfo`;
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.getLastDetectionInfoPath}`;
 
-            const body: any = { stream_url: streamUrl };
+            const body: any = { stream_id: streamId };
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
             try {
@@ -620,6 +620,28 @@ export class EyesOnItAPI {
     }
 
     /**
+     * Returns aggregate heatmap bins for persisted interaction candidate events.
+     *
+     * @param inputs Required camera filter, optional interaction filters, coordinate space, and bin counts.
+     * @returns A typed response containing aggregate heatmap bins and coordinate metadata.
+     * @remarks Endpoint: `POST /get_interaction_heatmap`
+     */
+    public async getInteractionHeatmap(inputs?: EOIGetInteractionHeatmapInputs): Promise<EOIGetInteractionHeatmapResponse> {
+        const logPrefix = `${this.constructor.name}.getInteractionHeatmap`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.getInteractionHeatmapPath}`;
+        const body: any = inputs ?? new EOIGetInteractionHeatmapInputs();
+
+        this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+        try {
+            const response = await this.doPost(endPoint, body, logPrefix);
+            return new EOIGetInteractionHeatmapResponse(response);
+        } catch (error) {
+            return new EOIGetInteractionHeatmapResponse(this.handleError(error));
+        }
+    }
+
+    /**
      * Updates review status for one persisted interaction candidate event.
      *
      * @param inputs Event ID, review status, and optional reviewer note.
@@ -644,18 +666,18 @@ export class EyesOnItAPI {
     /**
      * Retrieves the latest frame for a stream.
      *
-     * @param streamUrl RTSP stream URL to query.
+     * @param streamId Existing stream identifier to query.
      * @returns A typed response that includes a frame image payload.
      * @remarks Endpoint: `POST /get_video_frame`
      */
-    public async getVideoFrame(streamUrl: string): Promise<EOIGetVideoFrameResponse> {
-        let getVideoFrameResponse = new EOIGetVideoFrameResponse(EOIValidator.validateStreamUrl(streamUrl));
+    public async getVideoFrame(streamId: string): Promise<EOIGetVideoFrameResponse> {
+        let getVideoFrameResponse = new EOIGetVideoFrameResponse(EOIValidator.validateStreamId(streamId));
 
         if (getVideoFrameResponse.success) {
             const logPrefix = `${this.constructor.name}.getVideoFrame`;
             let endPoint = `${this.apiBasePath}${EyesOnItAPI.getVideoFramePath}`;
 
-            const body: any = { stream_url: streamUrl };
+            const body: any = { stream_id: streamId };
             this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
 
             try {

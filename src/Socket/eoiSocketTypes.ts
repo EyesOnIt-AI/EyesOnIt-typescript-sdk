@@ -55,6 +55,7 @@ export interface EOILiveSearchUpdateData {
     face_group_id?: string | null;
     similarity?: EOILiveSearchUpdateSimilarityData | null;
     alert_threshold?: number | null;
+    stream_ids?: string[] | null;
     track_alert_cooldown_seconds?: number | null;
     start_time?: string | Date | null;
     end_time?: string | Date | null;

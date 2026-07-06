@@ -8,6 +8,7 @@ import {
   EOIGetAllStreamsInfoResponse,
   EOIGetInteractionEventSummaryResponse,
   EOIGetInteractionEventsResponse,
+  EOIGetInteractionHeatmapResponse,
   EOIGetStreamDetailsResponse,
   EOIGetVideoFrameResponse,
   EOIGetVideoStatusResponse,
@@ -165,12 +166,13 @@ describe("output mappers", () => {
     expect(details.stream.isMonitoring()).toBe(true);
   });
 
-  it("maps interaction event lists, summaries, and defaults", () => {
+  it("maps interaction event lists, summaries, heatmaps, and defaults", () => {
     const events = new EOIGetInteractionEventsResponse(successResponse({
       total: 2,
       events: [
         {
           event_id: "event-1",
+          stream_id: "stream-1",
           stream_url: STREAM_URL,
           rule_id: "rule-1",
           rule_type: "count",
@@ -190,9 +192,23 @@ describe("output mappers", () => {
         by_status: { New: 1, Confirmed: 1 },
       },
     }));
+    const heatmap = new EOIGetInteractionHeatmapResponse(successResponse({
+      heatmap: {
+        coordinate_space: "camera",
+        fallback_from: "world",
+        bin_count_x: 4,
+        bin_count_y: 3,
+        bins: [{ x: 1, y: 2, count: 7 }, null],
+        events_with_points: 7,
+        events_without_points: 2,
+        frame_width: 1920,
+        frame_height: 1080,
+      },
+    }));
 
     expect(events.total).toBe(2);
     expect(events.events).toHaveLength(1);
+    expect(events.events[0].stream_id).toBe("stream-1");
     expect(events.events[0].status).toBe("New");
     expect(events.events[0].track_ids).toEqual(["1", "2"]);
     expect(events.events[0].metadata).toEqual({ source: "test" });
@@ -200,6 +216,11 @@ describe("output mappers", () => {
     expect(summary.summary.by_rule_type).toEqual({ count: 2 });
     expect(summary.summary.by_region).toEqual({});
     expect(summary.summary.by_status).toEqual({ New: 1, Confirmed: 1 });
+    expect(heatmap.heatmap.coordinate_space).toBe("camera");
+    expect(heatmap.heatmap.fallback_from).toBe("world");
+    expect(heatmap.heatmap.bins).toEqual([{ x: 1, y: 2, count: 7 }]);
+    expect(heatmap.heatmap.events_with_points).toBe(7);
+    expect(heatmap.heatmap.frame_width).toBe(1920);
   });
 
   it("maps video, license, live-search, frame, and face-recognition responses", () => {

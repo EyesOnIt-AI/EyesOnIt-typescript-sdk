@@ -6,6 +6,7 @@ import {
   EOIArchiveSearchInputs,
   EOIGetInteractionEventSummaryInputs,
   EOIGetInteractionEventsInputs,
+  EOIGetInteractionHeatmapInputs,
   EOIGetVideoStatusInputs,
   EOILiveSearchInputs,
   EOIMonitorStreamInputs,
@@ -21,6 +22,7 @@ import {
 
 const API_BASE_URL = "https://api.example.test";
 const STREAM_URL = "rtsp://camera.example.test/main";
+const STREAM_ID = "stream-1";
 
 const noopLogger = {
   debug: () => undefined,
@@ -78,7 +80,7 @@ function liveSearchInputs(): EOILiveSearchInputs {
   inputs.object_description = "person carrying a box";
   inputs.alert_threshold = 75;
   inputs.duration_seconds = 60;
-  inputs.stream_list = [STREAM_URL];
+  inputs.stream_ids = [STREAM_ID];
   return inputs;
 }
 
@@ -132,7 +134,7 @@ describe("EyesOnItAPI endpoint routing", () => {
       successResponse(),
       successResponse(),
       successResponse(),
-      successResponse({ stream: { stream_url: STREAM_URL, stream_id: "stream-1", name: "Main", status: "MONITORING" } }),
+      successResponse({ stream: { stream_url: STREAM_URL, stream_id: STREAM_ID, name: "Main", status: "MONITORING" } }),
       successResponse({ image: "frame-base64" }),
       successResponse({ video: { status: "running" } }),
     ]);
@@ -141,20 +143,20 @@ describe("EyesOnItAPI endpoint routing", () => {
     await api.validateLicense(new EOIValidateLicenseInputs("license-key", "license-token"));
     await api.stopVideo(new EOIStopVideoInputs());
     await api.stopVideo(new EOIStopVideoInputs("video-1"));
-    await api.monitorStream(new EOIMonitorStreamInputs(STREAM_URL, 30));
-    await api.stopMonitoringStream(STREAM_URL);
-    await api.getStreamDetails(STREAM_URL);
-    await api.getVideoFrame(STREAM_URL);
+    await api.monitorStream(new EOIMonitorStreamInputs(STREAM_ID, 30));
+    await api.stopMonitoringStream(STREAM_ID);
+    await api.getStreamDetails(STREAM_ID);
+    await api.getVideoFrame(STREAM_ID);
     await api.getVideoStatus(new EOIGetVideoStatusInputs("video-1"));
 
     expect(restHandler.postCalls.map((call) => ({ path: callPath(call), body: call.body }))).toMatchObject([
       { path: "/validate_license", body: { key: "license-key", token: "license-token" } },
       { path: "/stop_video", body: {} },
       { path: "/stop_video", body: { video_id: "video-1" } },
-      { path: "/monitor_stream", body: { stream_url: STREAM_URL, duration_seconds: 30 } },
-      { path: "/stop_monitoring", body: { stream_url: STREAM_URL } },
-      { path: "/get_stream_details", body: { stream_url: STREAM_URL } },
-      { path: "/get_video_frame", body: { stream_url: STREAM_URL } },
+      { path: "/monitor_stream", body: { stream_id: STREAM_ID, duration_seconds: 30 } },
+      { path: "/stop_monitoring", body: { stream_id: STREAM_ID } },
+      { path: "/get_stream_details", body: { stream_id: STREAM_ID } },
+      { path: "/get_video_frame", body: { stream_id: STREAM_ID } },
       { path: "/get_video_status", body: { video_id: "video-1" } },
     ]);
     expect(restHandler.postCalls.every((call) => (
@@ -172,12 +174,14 @@ describe("EyesOnItAPI endpoint routing", () => {
       successResponse(),
       successResponse({ events: [], total: 0 }),
       successResponse({ summary: { total: 2, by_status: { New: 2 } } }),
-      successResponse({ event: { event_id: "event-1", stream_url: STREAM_URL, rule_id: "rule-1", rule_type: "count", mode: "tracking", started_at: 1, last_seen_at: 2 } }),
+      successResponse({ heatmap: { coordinate_space: "camera", bins: [], events_with_points: 0, events_without_points: 0 } }),
+      successResponse({ event: { event_id: "event-1", stream_id: STREAM_ID, stream_url: STREAM_URL, rule_id: "rule-1", rule_type: "count", mode: "tracking", started_at: 1, last_seen_at: 2 } }),
       successResponse(),
     ]);
     const api = createApi(restHandler);
     const eventFilters = new EOIGetInteractionEventsInputs({ limit: 25, offset: 5, status: "New" });
     const summaryFilters = new EOIGetInteractionEventSummaryInputs({ rule_type: "line_cross", status: "Confirmed" });
+    const heatmapFilters = new EOIGetInteractionHeatmapInputs({ stream_id: STREAM_ID, preferred_coordinate_space: "world", bin_count_x: 32, bin_count_y: 18 });
     const statusUpdate = new EOIUpdateInteractionEventStatusInputs("event-1", "Confirmed", "reviewed");
     const configBody = { processing: { frame_rate: 4 }, features: { sockets: true } };
 
@@ -188,17 +192,19 @@ describe("EyesOnItAPI endpoint routing", () => {
     await api.cancelLiveSearch(new EOIUpdateLiveSearchInputs(123));
     await api.getInteractionEvents(eventFilters);
     await api.getInteractionEventSummary(summaryFilters);
+    await api.getInteractionHeatmap(heatmapFilters);
     await api.updateInteractionEventStatus(statusUpdate);
     await api.updateConfig(new EOIUpdateConfigInputs(configBody));
 
     expect(restHandler.postCalls.map((call) => ({ path: callPath(call), body: call.body }))).toMatchObject([
       { path: "/archive_search", body: { object_description: "person carrying a box" } },
-      { path: "/live_search", body: { object_description: "person carrying a box", alert_threshold: 75, duration_seconds: 60, stream_list: [STREAM_URL] } },
+      { path: "/live_search", body: { object_description: "person carrying a box", alert_threshold: 75, duration_seconds: 60, stream_ids: [STREAM_ID] } },
       { path: "/pause_live_search", body: { search_id: -1 } },
       { path: "/resume_live_search", body: { search_id: 123 } },
       { path: "/cancel_live_search", body: { search_id: 123 } },
       { path: "/get_interaction_events", body: { limit: 25, offset: 5, status: "New" } },
       { path: "/get_interaction_event_summary", body: { rule_type: "line_cross", status: "Confirmed" } },
+      { path: "/get_interaction_heatmap", body: { preferred_coordinate_space: "world", bin_count_x: 32, bin_count_y: 18, limit: 10000, stream_id: STREAM_ID } },
       { path: "/update_interaction_event_status", body: { event_id: "event-1", status: "Confirmed", reviewer_note: "reviewed" } },
       { path: "/update_config", body: configBody },
     ]);

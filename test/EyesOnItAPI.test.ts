@@ -148,7 +148,7 @@ describe("EyesOnItAPI REST behavior", () => {
   });
 
   it("posts addStream to the expected endpoint with schema version and serialized body", async () => {
-    const restHandler = new FakeRESTHandler([], [successResponse({}, "stream added")]);
+    const restHandler = new FakeRESTHandler([], [successResponse({ stream_id: "stream-front-door" }, "stream added")]);
     const inputs = new EOIAddStreamInputs(
       "rtsp://camera.example.test/main",
       "Front Door",
@@ -195,16 +195,17 @@ describe("EyesOnItAPI REST behavior", () => {
         .regions[0].detection_configs[0].object_descriptions[0].confidence,
     ).toBeUndefined();
     expect(result.success).toBe(true);
+    expect(result.stream_id).toBe("stream-front-door");
     expect(result.message).toBe("stream added");
   });
 
-  it("rejects invalid stream URLs before calling the REST handler", async () => {
+  it("rejects invalid stream IDs before calling the REST handler", async () => {
     const restHandler = new FakeRESTHandler([], [successResponse({})]);
 
     const result = await createApi(restHandler).removeStream("   ");
 
     expect(result.success).toBe(false);
-    expect(result.message).toBe("The stream url must be a valid RTSP URL");
+    expect(result.message).toBe("The stream id must not be null or empty");
     expect(restHandler.getCalls).toHaveLength(0);
     expect(restHandler.postCalls).toHaveLength(0);
   });
