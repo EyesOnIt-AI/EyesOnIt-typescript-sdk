@@ -1,91 +1,163 @@
-import axios from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import { EOIResponse } from "../eoiResponse";
-import { IEOIRESTHandler } from "./IEOIRESTHandler";
-import { Logger } from "../../utils/logger";
+import { EOIRESTRequestBody, EOIRESTRequestHeaders, IEOIRESTHandler } from "./IEOIRESTHandler";
+import { EOILogger, Logger } from "../../utils/logger";
+
+export type { EOILogger } from "../../utils/logger";
+
+export interface EOIAxiosRESTHandlerOptions {
+    timeoutMs?: number;
+    maxAttempts?: number;
+}
+
+type EOIAxiosResponseBody = {
+    success: boolean;
+    message?: string;
+    data?: unknown;
+};
 
 export class EOIAxiosRESTHandler implements IEOIRESTHandler {
-    private logger;
+    private static readonly defaultMaxAttempts = 2;
 
-    constructor(private customLogger?: any) {
-        this.logger = this.customLogger || new Logger();
+    private readonly logger: EOILogger;
+    private readonly timeoutMs?: number;
+    private readonly maxAttempts: number;
+
+    constructor(customLogger?: EOILogger, options: EOIAxiosRESTHandlerOptions = {}) {
+        this.logger = customLogger || new Logger();
+        this.timeoutMs = options.timeoutMs != null && options.timeoutMs >= 0
+            ? options.timeoutMs
+            : undefined;
+        this.maxAttempts = this.normalizeMaxAttempts(options.maxAttempts);
     }
 
     public async get(endPoint: string): Promise<EOIResponse> {
-        let eoiResponse: EOIResponse | null = null;
-
-        await axios.get(endPoint).then(async (response: any) => {
-            eoiResponse = new EOIResponse(response.data.success, response.data.message);
-            eoiResponse.data = response.data.data;
-        }).catch(async (error: any) => {
-            const errorDetails = this.formatAxiosError(error);
-            this.logger.error(`EOIAxiosRESTHandler.get error: ${errorDetails}`);
-            console.log(`EOIAxiosRESTHandler.get error: ${errorDetails}`);
-            eoiResponse = new EOIResponse(false, error.message);
-        });
-
-        if (eoiResponse == null) {
-            eoiResponse = new EOIResponse(false, "Unknown error");
-        }
-
-        return eoiResponse;
+        return this.request("get", endPoint);
     }
 
-    public async post(endPoint: string, body: string, headers: any): Promise<EOIResponse> {
-        const maxAttempts = 2;
+    public async post(endPoint: string, body: EOIRESTRequestBody, headers: EOIRESTRequestHeaders): Promise<EOIResponse> {
+        return this.request("post", endPoint, body, headers);
+    }
 
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            let eoiResponse: EOIResponse | null = null;
-            let staleConnection = false;
+    private async request(
+        method: "get" | "post",
+        endPoint: string,
+        body?: EOIRESTRequestBody,
+        headers?: EOIRESTRequestHeaders,
+    ): Promise<EOIResponse> {
+        for (let attempt = 1; attempt <= this.maxAttempts; attempt++) {
+            try {
+                const response = method === "get"
+                    ? await axios.get<EOIAxiosResponseBody>(endPoint, this.buildRequestConfig())
+                    : await axios.post<EOIAxiosResponseBody>(endPoint, body, this.buildRequestConfig(headers));
 
-            await axios.post(endPoint, body, { headers: headers/*, timeout: 5000*/ }).then(async (response: any) => {
-                eoiResponse = new EOIResponse(response.data.success, response.data.message);
-                eoiResponse.data = response.data.data;
-            }).catch(async (error: any) => {
-                if (attempt < maxAttempts && this.isStaleConnectionError(error)) {
-                    this.logger.warn(`EOIAxiosRESTHandler.post: stale keep-alive connection on attempt ${attempt}; retrying. ${error.message}`);
-                    staleConnection = true;
-                } else {
-                    const errorDetails = this.formatAxiosError(error);
-                    this.logger.error(`EOIAxiosRESTHandler.post error: ${errorDetails}`);
-                    console.log(`EOIAxiosRESTHandler.post error: ${errorDetails}`);
-                    eoiResponse = new EOIResponse(false, error.message);
+                return this.toEOIResponse(response);
+            } catch (error: unknown) {
+                if (attempt < this.maxAttempts && this.isRetryableError(error)) {
+                    this.logger.warn(`EOIAxiosRESTHandler.${method}: retryable request failure on attempt ${attempt}; retrying. ${this.getErrorMessage(error)}`);
+                    continue;
                 }
-            });
 
-            if (staleConnection) {
-                continue;
+                const errorDetails = this.formatAxiosError(error);
+                this.logger.error(`EOIAxiosRESTHandler.${method} error: ${errorDetails}`);
+                return new EOIResponse(false, this.getErrorMessage(error));
             }
-
-            if (eoiResponse == null) {
-                eoiResponse = new EOIResponse(false, "Unknown error");
-            }
-
-            return eoiResponse;
         }
 
         return new EOIResponse(false, "Request failed after retries");
     }
 
-    private isStaleConnectionError(error: any): boolean {
-        const code: string = error?.code ?? '';
-        const message: string = error?.message ?? '';
-        return code === 'ECONNRESET' ||
-            code === 'ECONNREFUSED' ||
-            message.toLowerCase().includes('connection was closed') ||
-            message.toLowerCase().includes('socket hang up') ||
-            message.toLowerCase().includes('connection closed');
+    private buildRequestConfig(headers?: EOIRESTRequestHeaders): AxiosRequestConfig {
+        const config: AxiosRequestConfig = {};
+
+        if (headers != null) {
+            config.headers = headers;
+        }
+
+        if (this.timeoutMs != null) {
+            config.timeout = this.timeoutMs;
+        }
+
+        return config;
     }
 
-    private formatAxiosError(error: any): string {
-        if (error.response?.data != null) {
+    private toEOIResponse(response: AxiosResponse<EOIAxiosResponseBody>): EOIResponse {
+        if (response.data == null) {
+            return new EOIResponse(false, "Empty response");
+        }
+
+        const eoiResponse = new EOIResponse(response.data.success, response.data.message);
+        eoiResponse.data = response.data.data;
+
+        return eoiResponse;
+    }
+
+    private normalizeMaxAttempts(maxAttempts: number | undefined): number {
+        if (maxAttempts == null) {
+            return EOIAxiosRESTHandler.defaultMaxAttempts;
+        }
+
+        return Number.isFinite(maxAttempts) && maxAttempts > 0
+            ? Math.floor(maxAttempts)
+            : 1;
+    }
+
+    private isRetryableError(error: unknown): boolean {
+        if (axios.isAxiosError(error) && error.response != null) {
+            return false;
+        }
+
+        const errorRecord = this.asErrorRecord(error);
+        const code = typeof errorRecord?.code === "string" ? errorRecord.code : "";
+        const message = this.getErrorMessage(error).toLowerCase();
+
+        return code === "ECONNRESET" ||
+            code === "ECONNREFUSED" ||
+            code === "ECONNABORTED" ||
+            code === "ETIMEDOUT" ||
+            message.includes("connection was closed") ||
+            message.includes("socket hang up") ||
+            message.includes("connection closed") ||
+            message.includes("timeout");
+    }
+
+    private formatAxiosError(error: unknown): string {
+        if (axios.isAxiosError(error) && error.response?.data != null) {
             return JSON.stringify(error.response.data);
         }
 
+        const errorRecord = this.asErrorRecord(error);
         return JSON.stringify({
-            code: error.code,
-            message: error.message,
-            url: error.config?.url,
+            code: errorRecord?.code,
+            message: this.getErrorMessage(error),
+            url: this.getRequestUrl(error),
         });
     }
 
+    private getErrorMessage(error: unknown): string {
+        if (error instanceof Error) {
+            return error.message;
+        }
+
+        const errorRecord = this.asErrorRecord(error);
+        if (typeof errorRecord?.message === "string") {
+            return errorRecord.message;
+        }
+
+        return "Unknown error";
+    }
+
+    private getRequestUrl(error: unknown): string | undefined {
+        if (!axios.isAxiosError(error)) {
+            return undefined;
+        }
+
+        return error.config?.url;
+    }
+
+    private asErrorRecord(error: unknown): Record<string, unknown> | null {
+        return error != null && typeof error === "object"
+            ? error as Record<string, unknown>
+            : null;
+    }
 }

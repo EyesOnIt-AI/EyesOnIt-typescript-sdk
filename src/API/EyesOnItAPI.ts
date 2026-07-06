@@ -1123,11 +1123,10 @@ export class EyesOnItAPI {
         return apiResponse;
     }
 
-    private async doPost(endPoint: string, body: any, callerLogPrefix: string): Promise<EOIResponse> {
-        const thisLogPrefix = `${this.constructor.name}.doPost`;
+    private async doPost(endPoint: string, body: unknown, callerLogPrefix: string): Promise<EOIResponse> {
         let apiResponse: EOIResponse | undefined = undefined;
 
-        const headers = {
+        const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'Accept': '*/*'
         };

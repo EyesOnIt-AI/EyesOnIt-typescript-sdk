@@ -1,30 +1,41 @@
 import log from 'loglevel';
 
-export class Logger {
-  private loggerInstance: any;
+export interface EOILogger {
+  debug(message: string, ...args: unknown[]): void;
+  info(message: string, ...args: unknown[]): void;
+  warn(message: string, ...args: unknown[]): void;
+  error(message: string, ...args: unknown[]): void;
+}
 
-  constructor(customLogger?: any) {
+type LoggerInstance = EOILogger & {
+  setLevel?: (level: log.LogLevelDesc) => void;
+};
+
+export class Logger implements EOILogger {
+  private loggerInstance: LoggerInstance;
+
+  constructor(customLogger?: EOILogger) {
     // Use the custom logger if provided, otherwise fall back to loglevel
-    this.loggerInstance = customLogger || log;
+    this.loggerInstance = (customLogger || log) as LoggerInstance;
   }
 
   setLogLevel(level: log.LogLevelDesc) {
-    this.loggerInstance.setLevel(level);
+    this.loggerInstance.setLevel?.(level);
   }
 
-  debug(message: string, ...args: any[]) {
+  debug(message: string, ...args: unknown[]) {
     this.loggerInstance.debug(message, ...args);
   }
 
-  info(message: string, ...args: any[]) {
+  info(message: string, ...args: unknown[]) {
     this.loggerInstance.info(message, ...args);
   }
 
-  warn(message: string, ...args: any[]) {
+  warn(message: string, ...args: unknown[]) {
     this.loggerInstance.warn(message, ...args);
   }
 
-  error(message: string, ...args: any[]) {
+  error(message: string, ...args: unknown[]) {
     this.loggerInstance.error(message, ...args);
   }
 }
