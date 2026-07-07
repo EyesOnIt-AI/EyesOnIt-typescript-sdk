@@ -14,7 +14,7 @@ type EOIAxiosResponseBody = {
     success: boolean;
     message?: string;
     data?: unknown;
-};
+} | string;
 
 export class EOIAxiosRESTHandler implements IEOIRESTHandler {
     private static readonly defaultMaxAttempts = 2;
@@ -72,6 +72,9 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
 
         if (headers != null) {
             config.headers = headers;
+            if (headers.Accept === "text/csv") {
+                config.responseType = "text";
+            }
         }
 
         if (this.timeoutMs != null) {
@@ -84,6 +87,12 @@ export class EOIAxiosRESTHandler implements IEOIRESTHandler {
     private toEOIResponse(response: AxiosResponse<EOIAxiosResponseBody>): EOIResponse {
         if (response.data == null) {
             return new EOIResponse(false, "Empty response");
+        }
+
+        if (typeof response.data === "string") {
+            const eoiResponse = new EOIResponse(true);
+            eoiResponse.data = { csv: response.data };
+            return eoiResponse;
         }
 
         const eoiResponse = new EOIResponse(response.data.success, response.data.message);

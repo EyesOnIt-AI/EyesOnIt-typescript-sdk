@@ -180,6 +180,10 @@ describe("output mappers", () => {
           track_ids: [1, "2"],
           started_at: 100,
           last_seen_at: 110,
+          status: "Needs validation",
+          false_positive_reason: "wrong_object_pair",
+          evidence_clip_status: "queued",
+          evidence_clip_id: "clip-1",
           metadata: { source: "test" },
         },
         null,
@@ -189,7 +193,7 @@ describe("output mappers", () => {
       summary: {
         total: 2,
         by_rule_type: { count: 2 },
-        by_status: { New: 1, Confirmed: 1 },
+        by_status: { new: 1, confirmed: 1 },
       },
     }));
     const heatmap = new EOIGetInteractionHeatmapResponse(successResponse({
@@ -209,13 +213,16 @@ describe("output mappers", () => {
     expect(events.total).toBe(2);
     expect(events.events).toHaveLength(1);
     expect(events.events[0].stream_id).toBe("stream-1");
-    expect(events.events[0].status).toBe("New");
+    expect(events.events[0].status).toBe("needs_follow_up");
+    expect(events.events[0].false_positive_reason).toBe("wrong_object_pair");
+    expect(events.events[0].evidence_clip_status).toBe("queued");
+    expect(events.events[0].evidence_clip_id).toBe("clip-1");
     expect(events.events[0].track_ids).toEqual(["1", "2"]);
     expect(events.events[0].metadata).toEqual({ source: "test" });
     expect(summary.summary.total).toBe(2);
     expect(summary.summary.by_rule_type).toEqual({ count: 2 });
     expect(summary.summary.by_region).toEqual({});
-    expect(summary.summary.by_status).toEqual({ New: 1, Confirmed: 1 });
+    expect(summary.summary.by_status).toEqual({ new: 1, confirmed: 1 });
     expect(heatmap.heatmap.coordinate_space).toBe("camera");
     expect(heatmap.heatmap.fallback_from).toBe("world");
     expect(heatmap.heatmap.bins).toEqual([{ x: 1, y: 2, count: 7 }]);

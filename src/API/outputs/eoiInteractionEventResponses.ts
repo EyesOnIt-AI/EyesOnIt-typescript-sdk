@@ -39,6 +39,16 @@ export interface EOIInteractionHeatmap {
     bounds?: EOIInteractionHeatmapWorldBounds | null;
 }
 
+export interface EOIInteractionEventClip {
+    success?: boolean;
+    status?: string;
+    clip_id?: string | null;
+    output_file_path?: string | null;
+    clip_start_utc?: number | null;
+    clip_end_utc?: number | null;
+    error?: string | null;
+}
+
 const emptyHeatmap: EOIInteractionHeatmap = {
     coordinate_space: "camera",
     fallback_from: null,
@@ -114,6 +124,46 @@ export class EOIUpdateInteractionEventStatusResponse extends EOIBaseOutputs {
             this.event = EOIInteractionEvent.fromJsonObj(eoiResponse.data.event);
         }
     }
+}
+
+export class EOIExportInteractionEventsCsvResponse extends EOIBaseOutputs {
+    public csv: string = "";
+
+    constructor(eoiResponse: EOIResponse) {
+        super(eoiResponse);
+
+        if (this.success) {
+            this.csv = typeof eoiResponse.data?.csv === "string" ? eoiResponse.data.csv : "";
+        }
+    }
+}
+
+export class EOIGenerateInteractionEventClipResponse extends EOIBaseOutputs {
+    public event?: EOIInteractionEvent;
+    public clip?: EOIInteractionEventClip;
+
+    constructor(eoiResponse: EOIResponse) {
+        super(eoiResponse);
+
+        if (eoiResponse.data?.event != null) {
+            this.event = EOIInteractionEvent.fromJsonObj(eoiResponse.data.event);
+        }
+        if (eoiResponse.data?.clip != null) {
+            this.clip = mapInteractionEventClip(eoiResponse.data.clip);
+        }
+    }
+}
+
+function mapInteractionEventClip(value: any): EOIInteractionEventClip {
+    return {
+        success: Boolean(value?.success),
+        status: value?.status,
+        clip_id: value?.clip_id,
+        output_file_path: value?.output_file_path,
+        clip_start_utc: nullableNumber(value?.clip_start_utc),
+        clip_end_utc: nullableNumber(value?.clip_end_utc),
+        error: value?.error,
+    };
 }
 
 function mapInteractionHeatmap(value: any): EOIInteractionHeatmap {

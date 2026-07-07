@@ -1,4 +1,4 @@
-export type EOIInteractionEventStatus = "New" | "Confirmed" | "Dismissed" | "Needs validation";
+export type EOIInteractionEventStatus = "new" | "confirmed" | "dismissed" | "needs_follow_up";
 
 export class EOIInteractionEvent {
     public event_id: string;
@@ -20,11 +20,17 @@ export class EOIInteractionEvent {
     public last_seen_at: number;
     public ended_at?: number | null;
     public frame_num?: number | null;
-    public status: EOIInteractionEventStatus = "New";
+    public status: EOIInteractionEventStatus = "new";
     public reviewer_note?: string | null;
+    public false_positive_reason?: string | null;
     public measured_value?: number | null;
     public threshold_value?: number | null;
     public distance_mode?: string | null;
+    public evidence_clip_status?: string | null;
+    public evidence_clip_id?: string | null;
+    public evidence_clip_path?: string | null;
+    public evidence_clip_error?: string | null;
+    public evidence_clip_requested_at?: number | null;
     public metadata: Record<string, any> = {};
     public created_at?: number | null;
     public updated_at?: number | null;
@@ -58,14 +64,28 @@ export class EOIInteractionEvent {
             last_seen_at: obj.last_seen_at,
             ended_at: obj.ended_at,
             frame_num: obj.frame_num,
-            status: obj.status ?? "New",
+            status: normalizeInteractionEventStatus(obj.status),
             reviewer_note: obj.reviewer_note,
+            false_positive_reason: obj.false_positive_reason,
             measured_value: obj.measured_value,
             threshold_value: obj.threshold_value,
             distance_mode: obj.distance_mode,
+            evidence_clip_status: obj.evidence_clip_status,
+            evidence_clip_id: obj.evidence_clip_id,
+            evidence_clip_path: obj.evidence_clip_path,
+            evidence_clip_error: obj.evidence_clip_error,
+            evidence_clip_requested_at: obj.evidence_clip_requested_at,
             metadata: obj.metadata ?? {},
             created_at: obj.created_at,
             updated_at: obj.updated_at,
         });
     }
+}
+
+export function normalizeInteractionEventStatus(value: any): EOIInteractionEventStatus {
+    const normalized = `${value ?? ""}`.trim().toLowerCase().replace(/\s+/g, "_");
+    if (normalized === "confirmed") return "confirmed";
+    if (normalized === "dismissed") return "dismissed";
+    if (normalized === "needs_validation" || normalized === "needs_follow_up") return "needs_follow_up";
+    return "new";
 }

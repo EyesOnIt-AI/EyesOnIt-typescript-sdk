@@ -18,6 +18,8 @@ export class EOIGetInteractionEventsInputs {
     }
 }
 
+export class EOIExportInteractionEventsCsvInputs extends EOIGetInteractionEventsInputs {}
+
 export class EOIGetInteractionEventSummaryInputs {
     public stream_id?: string | null;
     public region_name?: string | null;
@@ -60,10 +62,29 @@ export class EOIUpdateInteractionEventStatusInputs {
     public event_id: string;
     public status: EOIInteractionEventStatus;
     public reviewer_note?: string | null;
+    public false_positive_reason?: string | null;
 
-    constructor(event_id: string, status: EOIInteractionEventStatus, reviewer_note?: string | null) {
+    constructor(
+        event_id: string,
+        status: EOIInteractionEventStatus,
+        reviewer_note?: string | null,
+        false_positive_reason?: string | null,
+    ) {
         this.event_id = event_id;
         this.status = status;
         this.reviewer_note = reviewer_note;
+        this.false_positive_reason = false_positive_reason;
+    }
+}
+
+export class EOIGenerateInteractionEventClipInputs {
+    public event_id: string;
+    public pre_roll_seconds?: number | null;
+    public post_roll_seconds?: number | null;
+
+    constructor(event_id: string, pre_roll_seconds?: number | null, post_roll_seconds?: number | null) {
+        this.event_id = event_id;
+        this.pre_roll_seconds = pre_roll_seconds;
+        this.post_roll_seconds = post_roll_seconds;
     }
 }

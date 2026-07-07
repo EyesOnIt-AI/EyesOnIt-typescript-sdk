@@ -4,6 +4,8 @@ import {
   EOIAddFacerecPeopleInputs,
   EOIAddFacerecPersonInputs,
   EOIArchiveSearchInputs,
+  EOIGenerateInteractionEventClipInputs,
+  EOIExportInteractionEventsCsvInputs,
   EOIGetInteractionEventSummaryInputs,
   EOIGetInteractionEventsInputs,
   EOIGetInteractionHeatmapInputs,
@@ -173,16 +175,20 @@ describe("EyesOnItAPI endpoint routing", () => {
       successResponse(),
       successResponse(),
       successResponse({ events: [], total: 0 }),
-      successResponse({ summary: { total: 2, by_status: { New: 2 } } }),
+      successResponse({ summary: { total: 2, by_status: { new: 2 } } }),
       successResponse({ heatmap: { coordinate_space: "camera", bins: [], events_with_points: 0, events_without_points: 0 } }),
       successResponse({ event: { event_id: "event-1", stream_id: STREAM_ID, stream_url: STREAM_URL, rule_id: "rule-1", rule_type: "count", mode: "tracking", started_at: 1, last_seen_at: 2 } }),
+      successResponse({ csv: "event_id,status\nevent-1,confirmed\n" }),
+      successResponse({ event: { event_id: "event-1", stream_id: STREAM_ID, stream_url: STREAM_URL, rule_id: "rule-1", rule_type: "count", mode: "tracking", started_at: 1, last_seen_at: 2, evidence_clip_status: "queued" }, clip: { success: true, status: "queued", clip_id: "clip-1" } }),
       successResponse(),
     ]);
     const api = createApi(restHandler);
-    const eventFilters = new EOIGetInteractionEventsInputs({ limit: 25, offset: 5, status: "New" });
-    const summaryFilters = new EOIGetInteractionEventSummaryInputs({ rule_type: "line_cross", status: "Confirmed" });
+    const eventFilters = new EOIGetInteractionEventsInputs({ limit: 25, offset: 5, status: "new" });
+    const summaryFilters = new EOIGetInteractionEventSummaryInputs({ rule_type: "line_cross", status: "confirmed" });
     const heatmapFilters = new EOIGetInteractionHeatmapInputs({ stream_id: STREAM_ID, preferred_coordinate_space: "world", bin_count_x: 32, bin_count_y: 18 });
-    const statusUpdate = new EOIUpdateInteractionEventStatusInputs("event-1", "Confirmed", "reviewed");
+    const statusUpdate = new EOIUpdateInteractionEventStatusInputs("event-1", "confirmed", "reviewed", "wrong_object_pair");
+    const csvFilters = new EOIExportInteractionEventsCsvInputs({ status: "confirmed" });
+    const clipRequest = new EOIGenerateInteractionEventClipInputs("event-1", 6, 8);
     const configBody = { processing: { frame_rate: 4 }, features: { sockets: true } };
 
     await api.searchArchive(archiveSearchInputs());
@@ -194,6 +200,8 @@ describe("EyesOnItAPI endpoint routing", () => {
     await api.getInteractionEventSummary(summaryFilters);
     await api.getInteractionHeatmap(heatmapFilters);
     await api.updateInteractionEventStatus(statusUpdate);
+    await api.exportInteractionEventsCsv(csvFilters);
+    await api.generateInteractionEventClip(clipRequest);
     await api.updateConfig(new EOIUpdateConfigInputs(configBody));
 
     expect(restHandler.postCalls.map((call) => ({ path: callPath(call), body: call.body }))).toMatchObject([
@@ -202,12 +210,15 @@ describe("EyesOnItAPI endpoint routing", () => {
       { path: "/pause_live_search", body: { search_id: -1 } },
       { path: "/resume_live_search", body: { search_id: 123 } },
       { path: "/cancel_live_search", body: { search_id: 123 } },
-      { path: "/get_interaction_events", body: { limit: 25, offset: 5, status: "New" } },
-      { path: "/get_interaction_event_summary", body: { rule_type: "line_cross", status: "Confirmed" } },
+      { path: "/get_interaction_events", body: { limit: 25, offset: 5, status: "new" } },
+      { path: "/get_interaction_event_summary", body: { rule_type: "line_cross", status: "confirmed" } },
       { path: "/get_interaction_heatmap", body: { preferred_coordinate_space: "world", bin_count_x: 32, bin_count_y: 18, limit: 10000, stream_id: STREAM_ID } },
-      { path: "/update_interaction_event_status", body: { event_id: "event-1", status: "Confirmed", reviewer_note: "reviewed" } },
+      { path: "/update_interaction_event_status", body: { event_id: "event-1", status: "confirmed", reviewer_note: "reviewed", false_positive_reason: "wrong_object_pair" } },
+      { path: "/export_interaction_events_csv", body: { status: "confirmed" } },
+      { path: "/generate_interaction_event_clip", body: { event_id: "event-1", pre_roll_seconds: 6, post_roll_seconds: 8 } },
       { path: "/update_config", body: configBody },
     ]);
+    expect((restHandler.postCalls[9].headers as Record<string, string>).Accept).toBe("text/csv");
   });
 
   it("routes face recognition POST methods with expected request bodies", async () => {

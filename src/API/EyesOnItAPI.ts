@@ -10,7 +10,7 @@ import { EOIProcessImageInputs } from './inputs/eoiProcessImageInputs';
 import { EOIProcessVideoInputs } from './inputs/eoiProcessVideoInputs';
 import { EOIGetVideoStatusInputs } from './inputs/eoiGetVideoStatusInputs';
 import { EOIArchiveSearchInputs } from './inputs/eoiArchiveSearchInputs';
-import { EOIGetInteractionEventSummaryInputs, EOIGetInteractionEventsInputs, EOIGetInteractionHeatmapInputs, EOIUpdateInteractionEventStatusInputs } from './inputs/eoiInteractionEventInputs';
+import { EOIGenerateInteractionEventClipInputs, EOIExportInteractionEventsCsvInputs, EOIGetInteractionEventSummaryInputs, EOIGetInteractionEventsInputs, EOIGetInteractionHeatmapInputs, EOIUpdateInteractionEventStatusInputs } from './inputs/eoiInteractionEventInputs';
 import { EOILiveSearchInputs } from './inputs/eoiLiveSearchInputs';
 import { EOIStopVideoInputs } from './inputs/eoiStopVideoInputs';
 import { EOIUpdateConfigInputs } from './inputs/eoiUpdateConfigInputs';
@@ -25,7 +25,7 @@ import { EOIGetSupportedClassesResponse } from './outputs/eoiGetSupportedClasses
 import { EOIGetVideoStatusResponse } from './outputs/eoiGetVideoStatusResponse';
 import { EOIGetVideoFrameResponse } from './outputs/eoiGetVideoFrameResponse';
 import { EOIHealthResponse } from './outputs/eoiHealthResponse';
-import { EOIGetInteractionEventSummaryResponse, EOIGetInteractionEventsResponse, EOIGetInteractionHeatmapResponse, EOIUpdateInteractionEventStatusResponse } from './outputs/eoiInteractionEventResponses';
+import { EOIGenerateInteractionEventClipResponse, EOIExportInteractionEventsCsvResponse, EOIGetInteractionEventSummaryResponse, EOIGetInteractionEventsResponse, EOIGetInteractionHeatmapResponse, EOIUpdateInteractionEventStatusResponse } from './outputs/eoiInteractionEventResponses';
 import { EOILicenseStatusResponse } from './outputs/eoiLicenseStatusResponse';
 import { EOILicenseValidityResponse } from './outputs/eoiLicenseValidityResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
@@ -71,7 +71,9 @@ export class EyesOnItAPI {
     private static readonly getInteractionEventsPath = "/get_interaction_events";
     private static readonly getInteractionEventSummaryPath = "/get_interaction_event_summary";
     private static readonly getInteractionHeatmapPath = "/get_interaction_heatmap";
+    private static readonly exportInteractionEventsCsvPath = "/export_interaction_events_csv";
     private static readonly updateInteractionEventStatusPath = "/update_interaction_event_status";
+    private static readonly generateInteractionEventClipPath = "/generate_interaction_event_clip";
     private static readonly searchLivePath = "/live_search";
     private static readonly searchArchivePath = "/archive_search";
     private static readonly pauseLiveSearchPath = "/pause_live_search";
@@ -664,6 +666,50 @@ export class EyesOnItAPI {
     }
 
     /**
+     * Exports filtered interaction candidate events as CSV.
+     *
+     * @param inputs Optional stream, time, type, status, and pagination filters.
+     * @returns A typed response containing the CSV body.
+     * @remarks Endpoint: `POST /export_interaction_events_csv`
+     */
+    public async exportInteractionEventsCsv(inputs?: EOIExportInteractionEventsCsvInputs): Promise<EOIExportInteractionEventsCsvResponse> {
+        const logPrefix = `${this.constructor.name}.exportInteractionEventsCsv`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.exportInteractionEventsCsvPath}`;
+        const body: any = inputs ?? new EOIExportInteractionEventsCsvInputs();
+
+        this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+        try {
+            const response = await this.doPostCsv(endPoint, body, logPrefix);
+            return new EOIExportInteractionEventsCsvResponse(response);
+        } catch (error) {
+            return new EOIExportInteractionEventsCsvResponse(this.handleError(error));
+        }
+    }
+
+    /**
+     * Requests evidence clip generation for one interaction candidate event.
+     *
+     * @param inputs Event ID and optional pre/post roll seconds.
+     * @returns A typed response containing the updated event and clip request metadata.
+     * @remarks Endpoint: `POST /generate_interaction_event_clip`
+     */
+    public async generateInteractionEventClip(inputs: EOIGenerateInteractionEventClipInputs): Promise<EOIGenerateInteractionEventClipResponse> {
+        const logPrefix = `${this.constructor.name}.generateInteractionEventClip`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.generateInteractionEventClipPath}`;
+        const body: any = inputs;
+
+        this.logger.debug(`${logPrefix}: calling ${endPoint}. body = ${JSON.stringify(body)}`);
+
+        try {
+            const response = await this.doPost(endPoint, body, logPrefix);
+            return new EOIGenerateInteractionEventClipResponse(response);
+        } catch (error) {
+            return new EOIGenerateInteractionEventClipResponse(this.handleError(error));
+        }
+    }
+
+    /**
      * Retrieves the latest frame for a stream.
      *
      * @param streamId Existing stream identifier to query.
@@ -1151,6 +1197,24 @@ export class EyesOnItAPI {
         const headers: Record<string, string> = {
             'Content-Type': 'application/json',
             'Accept': '*/*'
+        };
+
+        if (this.restHandler == null) {
+            apiResponse = new EOIResponse(false, "REST handler not defined");
+        }
+        else {
+            apiResponse = await this.restHandler.post(endPoint, body, headers);
+        }
+
+        return apiResponse;
+    }
+
+    private async doPostCsv(endPoint: string, body: unknown, callerLogPrefix: string): Promise<EOIResponse> {
+        let apiResponse: EOIResponse | undefined = undefined;
+
+        const headers: Record<string, string> = {
+            'Content-Type': 'application/json',
+            'Accept': 'text/csv'
         };
 
         if (this.restHandler == null) {
