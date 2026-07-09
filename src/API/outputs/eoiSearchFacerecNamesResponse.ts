@@ -13,6 +13,14 @@ export class EOISearchFacerecNamesResult {
      * Display name for the matched entity.
      */
     public display_name: string;
+    /**
+     * True when this match is managed by remote management.
+     */
+    public remote_managed?: boolean;
+    /**
+     * Owner identifier for remotely managed records.
+     */
+    public managed_by?: string;
 }
 
 /**
@@ -22,7 +30,7 @@ export class EOISearchFacerecNamesResponse extends EOIBaseOutputs {
     /**
      * Matching names returned by the search.
      */
-    public matches: EOISearchFacerecNamesResult[];
+    public matches: EOISearchFacerecNamesResult[] = [];
 
     /**
      * @param eoiResponse Raw API response.

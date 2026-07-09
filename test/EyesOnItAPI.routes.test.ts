@@ -105,6 +105,7 @@ describe("EyesOnItAPI endpoint routing", () => {
       successResponse({ classes: ["person"] }),
       successResponse({ config: { frame_rate: 5 } }),
       successResponse({ groups: ["group-1"] }),
+      successResponse({ enabled: true, service_running: true }),
       successResponse({}),
     ]);
     const api = createApi(restHandler);
@@ -115,6 +116,7 @@ describe("EyesOnItAPI endpoint routing", () => {
     await api.getSupportedClasses();
     await api.getConfig();
     await api.getFacerecGroups();
+    await api.getRemoteManagementStatus();
     await api.isEoiAlive();
 
     expect(restHandler.getCalls).toEqual([
@@ -124,6 +126,7 @@ describe("EyesOnItAPI endpoint routing", () => {
       `${API_BASE_URL}/get_supported_classes`,
       `${API_BASE_URL}/get_config`,
       `${API_BASE_URL}/facerec_groups`,
+      `${API_BASE_URL}/remote_management/status`,
       `${API_BASE_URL}/is_eoi_alive`,
     ]);
     expect(restHandler.postCalls).toHaveLength(0);

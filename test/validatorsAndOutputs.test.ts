@@ -6,6 +6,7 @@ import {
   EOIDetectionConfig,
   EOIFacerecPersonDetailsResponse,
   EOIGetAllStreamsInfoResponse,
+  EOIGetFacerecGroupsResponse,
   EOIGetInteractionEventSummaryResponse,
   EOIGetInteractionEventsResponse,
   EOIGetInteractionHeatmapResponse,
@@ -18,10 +19,12 @@ import {
   EOILiveSearchResponse,
   EOIObjectDescription,
   EOIProcessVideoResponse,
+  EOIRemoteManagementStatusResponse,
   EOIResponse,
   EOIRule,
   EOIRuleAction,
   EOIRuleCondition,
+  EOISearchFacerecNamesResponse,
   EOIValidator,
   EOIVertex,
 } from "../src";
@@ -252,5 +255,87 @@ describe("output mappers", () => {
     expect(person.person_id).toBe("person-1");
     expect(person.groups[0]).toMatchObject({ external_id: "group-1", display_name: "Warehouse Team" });
     expect(person.images[0]).toMatchObject({ path: "/faces/jane.jpg", image: "image-base64" });
+  });
+
+  it("preserves remote-management status and remote-owned face-recognition metadata", () => {
+    const remoteStatus = new EOIRemoteManagementStatusResponse(successResponse({
+      enabled: true,
+      service_running: true,
+      base_url_configured: true,
+      api_key_file_configured: true,
+      location_id_configured: true,
+      resource_types: ["face_identities", "settings"],
+      sync_interval_seconds: 300,
+      settings_sync_enabled: true,
+      last_success_at: "2026-07-09T12:00:00Z",
+      last_failure_at: null,
+      last_failure_message: null,
+      last_change_count: 4,
+      remote_record_counts: { people: 1, groups: 2 },
+      cached_image_count: 3,
+    }));
+    const person = new EOIFacerecPersonDetailsResponse(successResponse({
+      person_id: "person-1",
+      person_name: "Jane Doe",
+      remote_managed: true,
+      managed_by: "tenant-1:bank-branch-1",
+      groups: [
+        {
+          external_id: "group-1",
+          display_name: "Warehouse Team",
+          remote_managed: true,
+          managed_by: "tenant-1:region-west",
+        },
+      ],
+      images: [],
+    }));
+    const groups = new EOIGetFacerecGroupsResponse(successResponse({
+      groups: [
+        {
+          id: 1,
+          external_id: "group-1",
+          display_name: "Warehouse Team",
+          description: "Remote group",
+          remote_managed: true,
+          managed_by: "tenant-1:region-west",
+        },
+      ],
+    }));
+    const search = new EOISearchFacerecNamesResponse(successResponse({
+      matches: [
+        {
+          external_id: "person-1",
+          display_name: "Jane Doe",
+          remote_managed: true,
+          managed_by: "tenant-1:bank-branch-1",
+        },
+      ],
+    }));
+
+    expect(remoteStatus.status).toBe(remoteStatus.data);
+    expect(remoteStatus.status).toMatchObject({
+      enabled: true,
+      service_running: true,
+      resource_types: ["face_identities", "settings"],
+      remote_record_counts: { people: 1, groups: 2 },
+      cached_image_count: 3,
+    });
+    expect(person.remote_managed).toBe(true);
+    expect(person.managed_by).toBe("tenant-1:bank-branch-1");
+    expect(person.groups[0]).toMatchObject({
+      external_id: "group-1",
+      remote_managed: true,
+      managed_by: "tenant-1:region-west",
+    });
+    expect(groups.groups[0]).toMatchObject({
+      external_id: "group-1",
+      remote_managed: true,
+      managed_by: "tenant-1:region-west",
+    });
+    expect(search.matches[0]).toMatchObject({
+      external_id: "person-1",
+      remote_managed: true,
+      managed_by: "tenant-1:bank-branch-1",
+    });
   });
 });

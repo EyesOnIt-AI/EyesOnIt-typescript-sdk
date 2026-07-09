@@ -17,6 +17,7 @@ export * from "./eoiLiveSearchResponse";
 export * from "./eoiMonitorStreamResponse";
 export * from "./eoiProcessImageResponse";
 export * from "./eoiProcessVideoResponse";
+export * from "./eoiRemoteManagementStatusResponse";
 export * from "./eoiRemoveFacerecGroupResponse";
 export * from "./eoiRemoveStreamResponse";
 export * from "./eoiSearchFacerecNamesResponse";

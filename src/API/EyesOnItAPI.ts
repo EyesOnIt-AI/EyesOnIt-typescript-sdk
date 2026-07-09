@@ -32,6 +32,7 @@ import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
 import { EOIProcessVideoResponse as EOIProcessVideoResponse } from './outputs/eoiProcessVideoResponse';
+import { EOIRemoteManagementStatusResponse } from './outputs/eoiRemoteManagementStatusResponse';
 import { EOIRemoveStreamResponse } from './outputs/eoiRemoveStreamResponse';
 import { EOISearchResponse } from './outputs/eoiSearchResponse';
 import { EOIStopMonitoringStreamResponse } from './outputs/eoiStopMonitoringStreamResponse';
@@ -81,6 +82,7 @@ export class EyesOnItAPI {
     private static readonly cancelLiveSearchPath = "/cancel_live_search";
     private static readonly getConfigPath = "/get_config";
     private static readonly updateConfigPath = "/update_config";
+    private static readonly remoteManagementStatusPath = "/remote_management/status";
     private static readonly facerecGroupsPath = "/facerec_groups";
     private static readonly facerecSearchGroupNamesPath = "/facerec_search_group_names";
     private static readonly facerecSearchPeopleNamesPath = "/facerec_search_people_names";
@@ -928,6 +930,25 @@ export class EyesOnItAPI {
         }
 
         return updateConfigResponse;
+    }
+
+    /**
+     * Returns local remote-management sync status.
+     *
+     * @returns A typed response containing sanitized local sync health and counts.
+     * @remarks Endpoint: `GET /remote_management/status`
+     */
+    public async getRemoteManagementStatus(): Promise<EOIRemoteManagementStatusResponse> {
+        const logPrefix = `${this.constructor.name}.getRemoteManagementStatus`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.remoteManagementStatusPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+
+        this.logger.debug(`${logPrefix}: ${endPoint} response success: ${eoiResponse.success}`);
+
+        return new EOIRemoteManagementStatusResponse(eoiResponse);
     }
 
     /**
