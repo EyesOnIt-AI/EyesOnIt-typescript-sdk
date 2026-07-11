@@ -13,6 +13,7 @@ export * from "./eoiHealthResponse";
 export * from "./eoiInteractionEventResponses";
 export * from "./eoiLicenseStatusResponse";
 export * from "./eoiLicenseValidityResponse";
+export * from "./eoiModelOptimizationStatusResponse";
 export * from "./eoiLiveSearchResponse";
 export * from "./eoiMonitorStreamResponse";
 export * from "./eoiProcessImageResponse";

@@ -11,6 +11,8 @@ import {
     EOILiveSearchUpdateData,
     EOILiveSearchUpdateHandler,
     EOILiveSearchUpdateMessage,
+    EOIModelOptimizationStatusHandler,
+    EOIModelOptimizationStatusMessage,
     EOIPerformanceUpdateHandler,
     EOIPerformanceUpdateMessage,
     EOISocketClientOptions,
@@ -39,6 +41,7 @@ type ServerEventName =
     | "live_search_detection"
     | "count_update"
     | "video_processing_update"
+    | "model_optimization_status"
     | "subscribed"
     | "unsubscribed"
     | "subscription_error";
@@ -62,6 +65,7 @@ export class EOISocketClient {
     private subscribedHandler?: EOISubscriptionHandler;
     private unsubscribedHandler?: EOISubscriptionHandler;
     private subscriptionErrorHandler?: EOISubscriptionErrorHandler;
+    private modelOptimizationStatusHandler?: EOIModelOptimizationStatusHandler;
     private connectPromise: Promise<void> | null = null;
     private readonly lastSequenceByRoom: Map<string, number> = new Map<string, number>();
     private readonly serverInstanceIdByRoom: Map<string, string> = new Map<string, string>();
@@ -155,6 +159,7 @@ export class EOISocketClient {
         this.setSubscribedHandler(handlers?.handleSubscribed?.bind(handlers) ?? null);
         this.setUnsubscribedHandler(handlers?.handleUnsubscribed?.bind(handlers) ?? null);
         this.setSubscriptionErrorHandler(handlers?.handleSubscriptionError?.bind(handlers) ?? null);
+        this.setModelOptimizationStatusHandler(handlers?.handleModelOptimizationStatus?.bind(handlers) ?? null);
     }
 
     public setConnectHandler(handler: EOISocketConnectHandler | null): void {
@@ -203,6 +208,10 @@ export class EOISocketClient {
 
     public setSubscriptionErrorHandler(handler: EOISubscriptionErrorHandler | null): void {
         this.subscriptionErrorHandler = handler ?? undefined;
+    }
+
+    public setModelOptimizationStatusHandler(handler: EOIModelOptimizationStatusHandler | null): void {
+        this.modelOptimizationStatusHandler = handler ?? undefined;
     }
 
     public joinRoom(room: string): void {
@@ -341,6 +350,13 @@ export class EOISocketClient {
                 isSnapshot,
                 rawPayload: payload,
             });
+        });
+
+        this.onServerEvent("model_optimization_status", (_room, payload) => {
+            const message = this.parseModelOptimizationStatus(payload);
+            if (message != null) {
+                this.modelOptimizationStatusHandler?.(message);
+            }
         });
     }
 
@@ -485,6 +501,15 @@ export class EOISocketClient {
             updates: rawUpdates.filter((update): update is EOIVideoProcessingUpdate => this.asObject(update) != null),
             isSnapshot,
         };
+    }
+
+    private parseModelOptimizationStatus(payload: unknown): EOIModelOptimizationStatusMessage | null {
+        const value = this.asObject(payload);
+        const state = value?.state;
+        if (state !== "pending" && state !== "running" && state !== "ready" && state !== "failed") {
+            return null;
+        }
+        return value as EOIModelOptimizationStatusMessage;
     }
 
     private parseLiveSearchUpdateEnvelope(payload: unknown): EOILiveSearchUpdateMessage | null {

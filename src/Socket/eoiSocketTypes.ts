@@ -1,5 +1,6 @@
 import type { ManagerOptions, SocketOptions } from "socket.io-client";
 import { EOIVideoDetection } from "../API/elements/eoiVideoDetection";
+import { EOIModelOptimizationStatusData } from "../API/outputs/eoiModelOptimizationStatusResponse";
 
 export type EOIVideoId = string | number;
 
@@ -186,6 +187,9 @@ export interface EOISubscriptionErrorMessage extends EOISubscriptionMessage {
     message?: string;
 }
 
+/** Server-pushed startup readiness update, sent on every Socket.IO connection and state change. */
+export type EOIModelOptimizationStatusMessage = EOIModelOptimizationStatusData;
+
 export type EOISocketConnectHandler = () => void;
 export type EOISocketDisconnectHandler = (reason: string) => void;
 export type EOIStreamUpdateHandler = (message: EOIStreamUpdateMessage) => void;
@@ -197,6 +201,7 @@ export type EOICountUpdateHandler = (message: EOICountUpdateMessage) => void;
 export type EOIVideoProcessingUpdateHandler = (message: EOIVideoProcessingUpdateMessage) => void;
 export type EOISubscriptionHandler = (message: EOISubscriptionMessage) => void;
 export type EOISubscriptionErrorHandler = (message: EOISubscriptionErrorMessage) => void;
+export type EOIModelOptimizationStatusHandler = (message: EOIModelOptimizationStatusMessage) => void;
 
 export interface EOISocketEventHandlers {
     handleConnect?(): void;
@@ -211,6 +216,7 @@ export interface EOISocketEventHandlers {
     handleSubscribed?(message: EOISubscriptionMessage): void;
     handleUnsubscribed?(message: EOISubscriptionMessage): void;
     handleSubscriptionError?(message: EOISubscriptionErrorMessage): void;
+    handleModelOptimizationStatus?(message: EOIModelOptimizationStatusMessage): void;
 }
 
 export interface EOISocketClientOptions {

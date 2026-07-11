@@ -14,6 +14,7 @@ import {
   EOIGetVideoFrameResponse,
   EOIGetVideoStatusResponse,
   EOILicenseValidityResponse,
+  EOIModelOptimizationStatusResponse,
   EOILine,
   EOILiveSearchInputs,
   EOILiveSearchResponse,
@@ -239,6 +240,12 @@ describe("output mappers", () => {
     const frame = new EOIGetVideoFrameResponse(successResponse({ image: "frame-base64" }));
     const license = new EOILicenseValidityResponse(successResponse({ entered: true, valid: false }));
     const liveSearch = new EOILiveSearchResponse(successResponse({ search_id: 99 }));
+    const optimization = new EOIModelOptimizationStatusResponse(successResponse({
+      state: "running",
+      completed_models: 3,
+      total_models: 7,
+      current_model: { id: "face_detector", label: "Face detector", gpu_id: 0, stage: "building" },
+    }));
     const person = new EOIFacerecPersonDetailsResponse(successResponse({
       person_id: "person-1",
       person_name: "Jane Doe",
@@ -252,6 +259,9 @@ describe("output mappers", () => {
     expect(license.entered).toBe(true);
     expect(license.valid).toBe(false);
     expect(liveSearch.search_id).toBe(99);
+    expect(optimization.state).toBe("running");
+    expect(optimization.completed_models).toBe(3);
+    expect(optimization.current_model?.label).toBe("Face detector");
     expect(person.person_id).toBe("person-1");
     expect(person.groups[0]).toMatchObject({ external_id: "group-1", display_name: "Warehouse Team" });
     expect(person.images[0]).toMatchObject({ path: "/faces/jane.jpg", image: "image-base64" });

@@ -28,6 +28,7 @@ import { EOIHealthResponse } from './outputs/eoiHealthResponse';
 import { EOIGenerateInteractionEventClipResponse, EOIExportInteractionEventsCsvResponse, EOIGetInteractionEventSummaryResponse, EOIGetInteractionEventsResponse, EOIGetInteractionHeatmapResponse, EOIUpdateInteractionEventStatusResponse } from './outputs/eoiInteractionEventResponses';
 import { EOILicenseStatusResponse } from './outputs/eoiLicenseStatusResponse';
 import { EOILicenseValidityResponse } from './outputs/eoiLicenseValidityResponse';
+import { EOIModelOptimizationStatusResponse } from './outputs/eoiModelOptimizationStatusResponse';
 import { EOILiveSearchResponse } from './outputs/eoiLiveSearchResponse';
 import { EOIMonitorStreamResponse } from './outputs/eoiMonitorStreamResponse';
 import { EOIProcessImageResponse } from './outputs/eoiProcessImageResponse';
@@ -97,6 +98,8 @@ export class EyesOnItAPI {
     private static readonly isLicenseValidPath = "/is_license_valid";
     private static readonly getLicenseStatusPath = "/get_license_status";
     private static readonly validateLicensePath = "/validate_license";
+    private static readonly modelOptimizationStatusPath = "/model_optimization_status";
+    private static readonly retryModelOptimizationPath = "/model_optimization/retry";
     
     private logger;
 
@@ -232,6 +235,39 @@ export class EyesOnItAPI {
         }
 
         return validateLicenseResponse;
+    }
+
+    /**
+     * Gets the startup TensorRT optimization state without triggering model work.
+     *
+     * @remarks Endpoint: `GET /model_optimization_status`
+     */
+    public async getModelOptimizationStatus(): Promise<EOIModelOptimizationStatusResponse> {
+        const logPrefix = `${this.constructor.name}.getModelOptimizationStatus`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.modelOptimizationStatusPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+        const eoiResponse: EOIResponse = await this.doGet(endPoint);
+        this.logger.debug(`${logPrefix}: ${endPoint} response success: ${eoiResponse.success}`);
+        return new EOIModelOptimizationStatusResponse(eoiResponse);
+    }
+
+    /**
+     * Restarts model optimization after a terminal optimization failure.
+     *
+     * @remarks Endpoint: `POST /model_optimization/retry`
+     */
+    public async retryModelOptimization(): Promise<EOIModelOptimizationStatusResponse> {
+        const logPrefix = `${this.constructor.name}.retryModelOptimization`;
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.retryModelOptimizationPath}`;
+
+        this.logger.debug(`${logPrefix}: Calling ${endPoint}`);
+        try {
+            const eoiResponse = await this.doPost(endPoint, {}, logPrefix);
+            return new EOIModelOptimizationStatusResponse(eoiResponse);
+        } catch (error) {
+            return new EOIModelOptimizationStatusResponse(this.handleError(error));
+        }
     }
 
 

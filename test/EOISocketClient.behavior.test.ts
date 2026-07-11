@@ -184,4 +184,27 @@ describe("EOISocketClient connection behavior", () => {
       payload: { room: "streams" },
     });
   });
+
+  it("delivers model optimization status updates without a room subscription", async () => {
+    const states: string[] = [];
+    const client = new EOISocketClient({
+      apiBaseUrl: "https://api.example.test",
+      clientId: "client-1",
+      handlers: {
+        handleModelOptimizationStatus: (message) => states.push(message.state ?? ""),
+      },
+    });
+    const socket = socketMock.sockets[0];
+
+    await client.connect();
+    socket.trigger("model_optimization_status", {
+      state: "running",
+      completed_models: 2,
+      total_models: 7,
+      current_model: { id: "clip", label: "CLIP", gpu_id: 0, stage: "building" },
+    });
+    socket.trigger("model_optimization_status", { state: "unknown" });
+
+    expect(states).toEqual(["running"]);
+  });
 });

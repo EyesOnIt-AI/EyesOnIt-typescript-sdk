@@ -37,13 +37,23 @@ If you need a distributable tarball (for example to publish or to use with a fil
 npm pack
 ```
 
-This will create `eyesonit-typescript-sdk-4.0.0.tgz` in the project root.
+This will create `eyesonit-typescript-sdk-5.0.0.tgz` in the project root.
 
 ### Usage ###
 
 ```
 
 ```
+
+### Startup model optimization ###
+
+EyesOnIt starts its GPU TensorRT optimization asynchronously. Before submitting a
+model-backed request, call `getModelOptimizationStatus()` once. Then configure
+`EOISocketClient` with `handleModelOptimizationStatus` to receive state changes
+without polling. The payload reports the current model and `completed_models` /
+`total_models`; only `state === "ready"` permits model operations. A terminal
+`failed` state can be restarted with `retryModelOptimization()` after the server
+issue has been corrected.
 
 ### API Documentation ###
 

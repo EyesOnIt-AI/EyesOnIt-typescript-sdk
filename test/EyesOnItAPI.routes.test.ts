@@ -107,6 +107,7 @@ describe("EyesOnItAPI endpoint routing", () => {
       successResponse({ groups: ["group-1"] }),
       successResponse({ enabled: true, service_running: true }),
       successResponse({}),
+      successResponse({ state: "running", completed_models: 2, total_models: 7 }),
     ]);
     const api = createApi(restHandler);
 
@@ -118,6 +119,7 @@ describe("EyesOnItAPI endpoint routing", () => {
     await api.getFacerecGroups();
     await api.getRemoteManagementStatus();
     await api.isEoiAlive();
+    await api.getModelOptimizationStatus();
 
     expect(restHandler.getCalls).toEqual([
       `${API_BASE_URL}/is_license_valid`,
@@ -128,6 +130,7 @@ describe("EyesOnItAPI endpoint routing", () => {
       `${API_BASE_URL}/facerec_groups`,
       `${API_BASE_URL}/remote_management/status`,
       `${API_BASE_URL}/is_eoi_alive`,
+      `${API_BASE_URL}/model_optimization_status`,
     ]);
     expect(restHandler.postCalls).toHaveLength(0);
   });
@@ -153,6 +156,7 @@ describe("EyesOnItAPI endpoint routing", () => {
     await api.getStreamDetails(STREAM_ID);
     await api.getVideoFrame(STREAM_ID);
     await api.getVideoStatus(new EOIGetVideoStatusInputs("video-1"));
+    await api.retryModelOptimization();
 
     expect(restHandler.postCalls.map((call) => ({ path: callPath(call), body: call.body }))).toMatchObject([
       { path: "/validate_license", body: { key: "license-key", token: "license-token" } },
@@ -163,6 +167,7 @@ describe("EyesOnItAPI endpoint routing", () => {
       { path: "/get_stream_details", body: { stream_id: STREAM_ID } },
       { path: "/get_video_frame", body: { stream_id: STREAM_ID } },
       { path: "/get_video_status", body: { video_id: "video-1" } },
+      { path: "/model_optimization/retry", body: {} },
     ]);
     expect(restHandler.postCalls.every((call) => (
       (call.headers as Record<string, string>)["Content-Type"] === "application/json"
