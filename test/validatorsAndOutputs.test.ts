@@ -138,6 +138,32 @@ describe("EOIValidator", () => {
     expect(EOIValidator.validateRules([badTimingRule], [config]).message).toContain("pre_roll_seconds");
   });
 
+  it("allows zero dwell only for interaction rules", () => {
+    const primary = detectionConfig("vehicle-config");
+    const secondary = detectionConfig("person-config");
+    const interactionRule = new EOIRule({
+      condition: new EOIRuleCondition({
+        type: "interaction.close_approach",
+        primary_config_id: "vehicle-config",
+        secondary_config_id: "person-config",
+        dwell_seconds: 0,
+      }),
+      actions: [new EOIRuleAction({ type: "alert" })],
+    });
+    const countRule = new EOIRule({
+      condition: new EOIRuleCondition({
+        type: "count",
+        detection_config_id: "person-config",
+        count: 1,
+        dwell_seconds: 0,
+      }),
+      actions: [new EOIRuleAction({ type: "alert" })],
+    });
+
+    expect(EOIValidator.validateRules([interactionRule], [primary, secondary]).success).toBe(true);
+    expect(EOIValidator.validateRules([countRule], [secondary]).message).toContain("at least 0.1");
+  });
+
   it("validates face recognition group inputs with field-specific errors", () => {
     const response = new EOIAddFacerecGroupInputs("g", "Warehouse", "long enough description").validate();
 
@@ -235,7 +261,7 @@ describe("output mappers", () => {
   });
 
   it("maps video, license, live-search, frame, and face-recognition responses", () => {
-    const video = new EOIProcessVideoResponse(successResponse({ video_id: 42 }));
+    const video = new EOIProcessVideoResponse(successResponse({ video_id: "video-42" }));
     const videoStatus = new EOIGetVideoStatusResponse(successResponse({ video: { status: "running", progress: 50 } }));
     const frame = new EOIGetVideoFrameResponse(successResponse({ image: "frame-base64" }));
     const license = new EOILicenseValidityResponse(successResponse({ entered: true, valid: false }));
@@ -253,7 +279,7 @@ describe("output mappers", () => {
       images: [{ path: "/faces/jane.jpg", image: "image-base64" }],
     }));
 
-    expect(video.video_id).toBe(42);
+    expect(video.video_id).toBe("video-42");
     expect(videoStatus.video).toEqual({ status: "running", progress: 50 });
     expect(frame.image).toBe("frame-base64");
     expect(license.entered).toBe(true);

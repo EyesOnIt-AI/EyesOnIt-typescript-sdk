@@ -398,7 +398,7 @@ export class EOIValidator {
             }
 
             if (response.success) {
-                response = this.validateRuleTiming(rule);
+                response = this.validateRuleTiming(rule, conditionType);
             }
 
             if (response.success && conditionType === "count") {
@@ -441,12 +441,13 @@ export class EOIValidator {
         return EOIResponse.success();
     }
 
-    private static validateRuleTiming(rule: EOIRule): EOIResponse {
+    private static validateRuleTiming(rule: EOIRule, conditionType: string): EOIResponse {
         const dwellSeconds = rule.dwell_seconds ?? rule.condition?.dwell_seconds;
         const resetSeconds = rule.reset_seconds ?? rule.condition?.reset_seconds;
+        const minimumDwellSeconds = conditionType.startsWith("interaction.") ? 0 : EOIValidator.MIN_ALERT_SECONDS;
 
-        if (dwellSeconds != null && dwellSeconds < EOIValidator.MIN_ALERT_SECONDS) {
-            return new EOIResponse(false, `Rule dwell_seconds must be at least ${EOIValidator.MIN_ALERT_SECONDS}. dwell_seconds = ${dwellSeconds}`);
+        if (dwellSeconds != null && dwellSeconds < minimumDwellSeconds) {
+            return new EOIResponse(false, `Rule dwell_seconds must be at least ${minimumDwellSeconds}. dwell_seconds = ${dwellSeconds}`);
         }
         if (resetSeconds != null && resetSeconds < EOIValidator.MIN_RESET_SECONDS) {
             return new EOIResponse(false, `Rule reset_seconds must be at least ${EOIValidator.MIN_RESET_SECONDS}. reset_seconds = ${resetSeconds}`);

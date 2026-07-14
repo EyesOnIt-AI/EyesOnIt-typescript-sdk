@@ -8,9 +8,9 @@ import { EOIBaseOutputs } from "./eoiBaseOutputs";
 export class EOIProcessVideoResponse extends EOIBaseOutputs {
 
     /**
-     * Optional base64-encoded output image (often annotated).
+     * Identifier for the asynchronous video-processing job.
     */
-    public video_id: number;
+    public video_id: string;
 
     /**
      * @param eoiResponse Raw API response.
