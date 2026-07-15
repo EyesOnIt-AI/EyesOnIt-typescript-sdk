@@ -17,6 +17,7 @@ import { EOIUpdateConfigInputs } from './inputs/eoiUpdateConfigInputs';
 import { EOIValidator } from './eoiValidator';
 import { EOIValidateLicenseInputs } from './inputs/eoiValidateLicenseInputs';
 import { EOIAddStreamResponse } from './outputs/eoiAddStreamResponse';
+import { EOIAddStreamsResponse } from './outputs/eoiAddStreamsResponse';
 import { EOIGetConfigResponse } from './outputs/eoiGetConfigResponse';
 import { EOIGetAllStreamsInfoResponse } from './outputs/eoiGetAllStreamsInfoResponse';
 import { EOIGetLastDetectionInfoResponse } from './outputs/eoiGetLastDetectionInfoResponse';
@@ -59,6 +60,7 @@ import { EOIAddFacerecPeopleInputs } from './inputs/eoiAddFacerecPeopleInputs';
 export class EyesOnItAPI {
     private static readonly processImagePath = "/process_image";
     private static readonly addStreamPath = "/add_stream";
+    private static readonly addStreamsPath = "/add_streams";
     private static readonly processVideoPath = "/process_video";
     private static readonly stopVideoPath = "/stop_video";
     private static readonly getVideoStatusPath = "/get_video_status";
@@ -335,6 +337,31 @@ export class EyesOnItAPI {
         }
 
         return addStreamResponse;
+    }
+
+    /** Register or replace multiple streams in one bounded server-side batch. */
+    public async addStreams(inputs: EOIAddStreamInputs[], replaceExisting: boolean = true): Promise<EOIAddStreamsResponse> {
+        const logPrefix = `${this.constructor.name}.addStreams`;
+        if (!Array.isArray(inputs) || inputs.length === 0) {
+            return new EOIAddStreamsResponse(new EOIResponse(false, "At least one stream is required"));
+        }
+        for (const input of inputs) {
+            const validation = EOIValidator.validateAddStreamInputs(input);
+            if (!validation.success) {
+                return new EOIAddStreamsResponse(validation);
+            }
+        }
+        const endPoint = `${this.apiBasePath}${EyesOnItAPI.addStreamsPath}`;
+        try {
+            const response = await this.doPost(
+                endPoint,
+                { streams: inputs.map((input) => input.toRequestBody()), replace_existing: replaceExisting },
+                logPrefix,
+            );
+            return new EOIAddStreamsResponse(response);
+        } catch (error) {
+            return new EOIAddStreamsResponse(this.handleError(error));
+        }
     }
 
     /**

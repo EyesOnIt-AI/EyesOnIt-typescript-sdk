@@ -199,6 +199,59 @@ describe("EyesOnItAPI REST behavior", () => {
     expect(result.message).toBe("stream added");
   });
 
+  it("posts multiple streams as one batch and maps per-stream results", async () => {
+    const restHandler = new FakeRESTHandler([], [
+      successResponse({
+        results: [
+          { stream_id: "stream-a", success: true, status: "IDLE", message: "Registered" },
+          { stream_id: "stream-b", success: true, status: "RECONNECTING", message: "Registered; connection retry scheduled" },
+        ],
+      }, "All streams registered"),
+    ]);
+    const makeInputs = (url: string, name: string) => new EOIAddStreamInputs(
+      url,
+      name,
+      1920,
+      1080,
+      5,
+      false,
+      [],
+      [createRegion()],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+    );
+
+    const result = await createApi(restHandler).addStreams([
+      makeInputs("rtsp://camera-a.example.test/main", "Camera A"),
+      makeInputs("rtsp://camera-b.example.test/main", "Camera B"),
+    ], true);
+
+    expect(restHandler.postCalls).toHaveLength(1);
+    expect(restHandler.postCalls[0].endPoint).toBe(`${API_BASE_URL}/add_streams`);
+    expect(restHandler.postCalls[0].body).toMatchObject({
+      replace_existing: true,
+      streams: [
+        { schema_version: EOI_CURRENT_SCHEMA_VERSION, stream_url: "rtsp://camera-a.example.test/main" },
+        { schema_version: EOI_CURRENT_SCHEMA_VERSION, stream_url: "rtsp://camera-b.example.test/main" },
+      ],
+    });
+    expect(result.success).toBe(true);
+    expect(result.results).toHaveLength(2);
+    expect(result.results[1]).toMatchObject({ stream_id: "stream-b", status: "RECONNECTING" });
+  });
+
+  it("rejects an empty stream batch before calling REST", async () => {
+    const restHandler = new FakeRESTHandler([], [successResponse({})]);
+
+    const result = await createApi(restHandler).addStreams([]);
+
+    expect(result.success).toBe(false);
+    expect(result.message).toBe("At least one stream is required");
+    expect(restHandler.postCalls).toHaveLength(0);
+  });
+
   it("rejects invalid stream IDs before calling the REST handler", async () => {
     const restHandler = new FakeRESTHandler([], [successResponse({})]);
 

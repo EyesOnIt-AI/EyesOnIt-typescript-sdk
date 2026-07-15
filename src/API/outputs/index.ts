@@ -1,4 +1,5 @@
 export * from "./eoiAddStreamResponse";
+export * from "./eoiAddStreamsResponse";
 export * from "./eoiBaseOutputs";
 export * from "./eoiFacerecPersonDetailsResponse";
 export * from "./eoiGetAllStreamsInfoResponse";

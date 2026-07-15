@@ -4,6 +4,15 @@ import { EOIRecording } from "./eoiRecording";
 import { EOIRegion } from "./eoiRegion";
 import { EOICameraCalibration } from "./eoiCameraCalibration";
 
+export interface EOIConfigurationWarning {
+    code: string;
+    message: string;
+    configured_width?: number;
+    configured_height?: number;
+    observed_width?: number;
+    observed_height?: number;
+}
+
 export class EOIStreamInfo {
     public schema_version?: string;
     public stream_url: string;
@@ -18,6 +27,7 @@ export class EOIStreamInfo {
     public calibration: EOICameraCalibration | undefined;
     public notification: EOINotification | undefined;
     public recording: EOIRecording | undefined;
+    public configuration_warnings: EOIConfigurationWarning[] = [];
 
     public static fromJsonObj(obj: any): EOIStreamInfo {
         let streamInfo: EOIStreamInfo = new EOIStreamInfo();
@@ -41,6 +51,7 @@ export class EOIStreamInfo {
         this.calibration = EOICameraCalibration.fromJsonObj(obj.calibration);
         this.notification = EOINotification.fromJsonObj(obj.notification);
         this.recording = EOIRecording.fromJsonObj(obj.recording);
+        this.configuration_warnings = Array.isArray(obj.configuration_warnings) ? obj.configuration_warnings : [];
     }
 
     public isMonitoring(): boolean {
